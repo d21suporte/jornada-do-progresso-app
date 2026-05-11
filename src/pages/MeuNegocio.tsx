@@ -674,32 +674,41 @@ function CatCard({
       </div>
 
       <div className="flex items-start gap-3">
-        {/* Imagem do ativo (quadrada com cantos arredondados, sombra projetada à direita) */}
-        <button
-          type="button"
-          onClick={onOpen}
-          aria-label={`Abrir ${label}`}
-          className="shrink-0"
-        >
-          <img
-            src={image}
-            alt={label}
-            className="block h-24 w-24 rounded-2xl object-cover shadow-[6px_4px_14px_-3px_rgba(0,0,0,0.5)] ring-1 ring-border"
-          />
-        </button>
+        {/* Coluna da imagem + contador abaixo */}
+        <div className="flex shrink-0 flex-col items-center">
+          <button
+            type="button"
+            onClick={onOpen}
+            aria-label={`Abrir ${label}`}
+          >
+            <img
+              src={image}
+              alt={label}
+              className="block h-24 w-24 rounded-2xl object-cover shadow-[6px_4px_14px_-3px_rgba(0,0,0,0.5)] ring-1 ring-border"
+            />
+          </button>
+          <div className="mt-1.5 text-center">
+            <p className={cn("text-2xl font-extrabold leading-none", COUNT_COLOR[color])}>
+              {count}
+            </p>
+            <p className="mt-0.5 text-[9.5px] leading-tight text-muted-foreground">
+              {countLabel}
+            </p>
+          </div>
+        </div>
 
-        {/* Coluna direita: título + subtítulo, dica no meio, contador no rodapé */}
+        {/* Coluna direita: título + subtítulo + dica */}
         <div className="flex min-w-0 flex-1 flex-col">
-          <div className="min-w-0 pr-28">
+          <div className="min-w-0 pr-24">
             <p className="truncate text-[15px] font-extrabold uppercase leading-tight tracking-tight">
               {label}
             </p>
             <p className="mt-0.5 truncate text-[11px] text-muted-foreground">{sub}</p>
           </div>
 
-          {/* Dica (preenche o espaço vazio) */}
+          {/* Dica */}
           {tip && (
-            <div className="mt-1.5 flex items-start gap-1.5 rounded-lg bg-muted/50 px-2 py-1.5">
+            <div className="mt-1.5 flex items-start gap-1.5 rounded-lg bg-muted/50 px-2 py-1.5 pr-12">
               <Lightbulb
                 className={cn("h-3.5 w-3.5 shrink-0 mt-px", COUNT_COLOR[color])}
                 strokeWidth={2.2}
@@ -707,18 +716,18 @@ function CatCard({
               <p className="text-[10.5px] leading-snug text-muted-foreground">{tip}</p>
             </div>
           )}
-
-          {/* Contador no canto inferior direito */}
-          <div className="mt-auto flex items-end justify-end pt-1 text-right">
-            <div>
-              <p className={cn("text-3xl font-extrabold leading-none", COUNT_COLOR[color])}>
-                {count}
-              </p>
-              <p className="mt-1 text-[10px] text-muted-foreground">{countLabel}</p>
-            </div>
-          </div>
         </div>
       </div>
+
+      {/* Botão adicionar no canto inferior direito */}
+      <button
+        type="button"
+        aria-label={addLabel}
+        onClick={onAdd}
+        className="absolute bottom-2 right-2 flex h-9 w-9 items-center justify-center rounded-full bg-emerald-500 leading-none text-white shadow-md hover:bg-emerald-600"
+      >
+        <Plus className="h-5 w-5" strokeWidth={3} aria-hidden="true" />
+      </button>
     </div>
   );
 }
