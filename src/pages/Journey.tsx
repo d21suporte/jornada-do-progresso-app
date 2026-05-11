@@ -88,7 +88,7 @@ const Journey = () => {
 
       <Day1Experience open={openDay === 1} onOpenChange={(o) => !o && setOpenDay(null)} />
 
-      <Sheet open={openDay !== null && ![1, 2, 3, 4].includes(openDay)} onOpenChange={(o) => !o && setOpenDay(null)}>
+      <Sheet open={openDay !== null && openDay !== 1} onOpenChange={(o) => !o && setOpenDay(null)}>
         <SheetContent side="bottom" className="rounded-t-3xl border-0 pb-8">
           {current && (
             <>
