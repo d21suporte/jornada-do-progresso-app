@@ -678,18 +678,18 @@ function CatCard({
         </DropdownMenu>
       </div>
 
-      <div className="flex gap-3">
+      <div className="flex items-start gap-3">
         {/* Imagem do ativo (quadrada com cantos arredondados, sombra projetada à direita) */}
         <button
           type="button"
           onClick={onOpen}
           aria-label={`Abrir ${label}`}
-          className="shrink-0 self-stretch"
+          className="shrink-0"
         >
           <img
             src={image}
             alt={label}
-            className="h-24 w-24 rounded-2xl object-cover shadow-[6px_4px_14px_-3px_rgba(0,0,0,0.5)] ring-1 ring-border"
+            className="block h-24 w-24 rounded-2xl object-cover shadow-[6px_4px_14px_-3px_rgba(0,0,0,0.5)] ring-1 ring-border"
           />
         </button>
 
