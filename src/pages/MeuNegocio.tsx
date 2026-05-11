@@ -204,7 +204,7 @@ function parseCSV(text: string): Record<string, string>[] {
 }
 
 // ============================================================
-type Cat = "produtos" | "servicos" | "info" | null;
+type Cat = "produtos" | "servicos" | "info" | "vendas" | null;
 
 const MeuNegocio = () => {
   const [cat, setCat] = useState<Cat>(null);
