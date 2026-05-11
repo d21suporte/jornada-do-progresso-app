@@ -49,6 +49,10 @@ import {
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { NewSaleDialog } from "@/components/NewSaleDialog";
+import catProdutos from "@/assets/cat-produtos.png";
+import catServicos from "@/assets/cat-servicos.png";
+import catInfo from "@/assets/cat-infoprodutos.png";
+import catVendas from "@/assets/cat-vendas.png";
 
 // ---------- Types ----------
 type Contact = { name: string; phone?: string; email?: string; address?: string };
@@ -339,7 +343,7 @@ const MeuNegocio = () => {
             </p>
             <div className="grid grid-cols-1 gap-3 px-1">
               <CatCard
-                icon={<Package className="h-5 w-5" />}
+                image={catProdutos}
                 color="amber"
                 label="Produtos"
                 count={products.length}
@@ -349,7 +353,7 @@ const MeuNegocio = () => {
                 onAdd={() => setAddOpen("produtos")}
               />
               <CatCard
-                icon={<Wrench className="h-5 w-5" />}
+                image={catServicos}
                 color="blue"
                 label="Serviços"
                 count={services.length}
@@ -359,7 +363,7 @@ const MeuNegocio = () => {
                 onAdd={() => setAddOpen("servicos")}
               />
               <CatCard
-                icon={<GraduationCap className="h-5 w-5" />}
+                image={catInfo}
                 color="violet"
                 label="Infoprodutos"
                 count={infos.length}
@@ -369,7 +373,7 @@ const MeuNegocio = () => {
                 onAdd={() => setAddOpen("info")}
               />
               <CatCard
-                icon={<TrendingUp className="h-5 w-5" />}
+                image={catVendas}
                 color="sales"
                 label="Vendas"
                 count={sales.filter((s) => s.status === "Pago").length}
@@ -581,7 +585,7 @@ function BackToTop() {
 }
 
 function CatCard({
-  icon,
+  image,
   color,
   label,
   count,
@@ -592,7 +596,7 @@ function CatCard({
   onEdit,
   onDelete,
 }: {
-  icon: React.ReactNode;
+  image: string;
   color: string;
   label: string;
   count: number;
@@ -604,36 +608,11 @@ function CatCard({
   onDelete?: () => void;
 }) {
   const iconBtn =
-    "flex h-7 w-7 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20";
+    "flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground hover:bg-muted";
   return (
-    <div className="relative flex items-center gap-3 rounded-2xl border border-border bg-card p-3 shadow-soft">
-      {/* Ícone + Título em destaque */}
-      <div
-        className={cn(
-          "flex h-12 w-12 shrink-0 items-center justify-center rounded-xl",
-          CAT_COLORS[color],
-        )}
-      >
-        {icon}
-      </div>
-
-      <div className="min-w-0 flex-1">
-        <div className="flex items-baseline gap-2">
-          <p className="truncate text-base font-extrabold leading-tight">{label}</p>
-          <p className={cn("text-lg font-extrabold leading-none", COUNT_COLOR[color])}>{count}</p>
-        </div>
-        <p className="mt-0.5 truncate text-[11px] text-muted-foreground">{countLabel}</p>
-        <button
-          type="button"
-          onClick={onAdd}
-          className="mt-1 text-[11px] font-bold text-emerald-600 hover:underline"
-        >
-          + {addLabel}
-        </button>
-      </div>
-
-      {/* Ações */}
-      <div className="flex shrink-0 items-center gap-1">
+    <div className="relative rounded-2xl border border-border bg-card p-3 shadow-soft">
+      {/* Ações no canto superior direito */}
+      <div className="absolute right-2 top-2 z-10 flex items-center gap-0.5">
         <button
           type="button"
           aria-label={`Áudio de ${label}`}
@@ -663,7 +642,7 @@ function CatCard({
             <button
               type="button"
               aria-label={`Menu ${label}`}
-              className="flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground hover:bg-muted"
+              className={iconBtn}
             >
               <MoreVertical className="h-4 w-4" />
             </button>
@@ -679,6 +658,31 @@ function CatCard({
             <DropdownMenuItem onClick={onOpen}>Ver todos os lançamentos</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+        <button
+          type="button"
+          aria-label={addLabel}
+          onClick={onAdd}
+          className="ml-1 flex h-7 w-7 items-center justify-center rounded-full bg-emerald-500 text-white shadow-md hover:bg-emerald-600"
+        >
+          <Plus className="h-4 w-4" />
+        </button>
+      </div>
+
+      {/* Foto de perfil + título + subtítulo (estilo Instagram) */}
+      <div className="flex h-20 items-center gap-3">
+        <div className="relative h-full aspect-square shrink-0">
+          <img
+            src={image}
+            alt={label}
+            className="h-full w-full rounded-full object-cover shadow-[4px_3px_10px_-2px_rgba(0,0,0,0.45)] ring-1 ring-border"
+          />
+        </div>
+        <div className="min-w-0 flex-1 pt-7">
+          <p className="truncate text-base font-extrabold leading-tight">{label}</p>
+          <p className="mt-0.5 truncate text-[11px] text-muted-foreground">
+            <span className={cn("font-bold", COUNT_COLOR[color])}>{count}</span> {countLabel}
+          </p>
+        </div>
       </div>
     </div>
   );
