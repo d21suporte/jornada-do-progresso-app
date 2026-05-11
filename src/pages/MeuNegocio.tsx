@@ -20,6 +20,7 @@ import {
   ArrowUp,
   HelpCircle,
   TrendingUp,
+  Lightbulb,
 } from "lucide-react";
 import {
   DropdownMenu,
