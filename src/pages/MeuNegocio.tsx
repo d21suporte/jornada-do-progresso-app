@@ -337,7 +337,7 @@ const MeuNegocio = () => {
             <p className="mb-2 text-xs font-bold uppercase text-muted-foreground">
               Meus ativos por categoria
             </p>
-            <div className="grid grid-cols-2 gap-3 px-1">
+            <div className="grid grid-cols-1 gap-3 px-1">
               <CatCard
                 icon={<Package className="h-5 w-5" />}
                 color="amber"
