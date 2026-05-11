@@ -1,5 +1,5 @@
 import { MobileShell } from "@/components/MobileShell";
-import { JOURNEY_DAYS } from "@/data/journey";
+import { JOURNEY_DAYS, JOURNEY_EXTRA } from "@/data/journey";
 import { useJourney } from "@/hooks/useFinance";
 import { Check, Lock, Target } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -7,9 +7,6 @@ import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Day1Experience } from "@/components/Day1Experience";
-import { Day2Experience } from "@/components/Day2Experience";
-import { Day3Experience } from "@/components/Day3Experience";
-import { Day4Experience } from "@/components/Day4Experience";
 
 const Journey = () => {
   const { isCompleted, toggleDay, progress } = useJourney();
@@ -79,12 +76,19 @@ const Journey = () => {
         })}
       </ul>
 
-      <Day1Experience open={openDay === 1} onOpenChange={(o) => !o && setOpenDay(null)} />
-      <Day2Experience open={openDay === 2} onOpenChange={(o) => !o && setOpenDay(null)} />
-      <Day3Experience open={openDay === 3} onOpenChange={(o) => !o && setOpenDay(null)} />
-      <Day4Experience open={openDay === 4} onOpenChange={(o) => !o && setOpenDay(null)} />
+      {/* Jornada Extra — slot futuro */}
+      <section className="mt-6 rounded-3xl border-2 border-dashed border-border bg-card/50 p-5 text-center shadow-soft">
+        <div className="mx-auto mb-3 inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-primary">
+          <Lock className="h-3 w-3" />
+          {JOURNEY_EXTRA.subtitle}
+        </div>
+        <h3 className="text-base font-bold">{JOURNEY_EXTRA.title}</h3>
+        <p className="mt-1.5 text-sm leading-snug text-muted-foreground">{JOURNEY_EXTRA.description}</p>
+      </section>
 
-      <Sheet open={openDay !== null && ![1, 2, 3, 4].includes(openDay)} onOpenChange={(o) => !o && setOpenDay(null)}>
+      <Day1Experience open={openDay === 1} onOpenChange={(o) => !o && setOpenDay(null)} />
+
+      <Sheet open={openDay !== null && openDay !== 1} onOpenChange={(o) => !o && setOpenDay(null)}>
         <SheetContent side="bottom" className="rounded-t-3xl border-0 pb-8">
           {current && (
             <>

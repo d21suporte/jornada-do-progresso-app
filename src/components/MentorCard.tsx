@@ -8,15 +8,36 @@ import { useNavigate } from "@/lib/router-compat";
  * Mentor por capítulo. Quando o usuário ainda não iniciou, mostra Cerbasi (Cap. 1).
  * Quando avança, troca o tutor de acordo com o último capítulo concluído.
  */
-const MENTORS: Record<number, { name: string; role: string; initials: string; tone: string }> = {
+type Mentor = { name: string; role: string; initials: string; tone: string };
+
+const MENTORS: Record<number, Mentor> = {
   1: { name: "Gustavo Cerbasi", role: "Orçamento Consciente", initials: "GC", tone: "from-emerald-500 to-teal-600" },
   2: { name: "Dave Ramsey", role: "Bola de Neve das Dívidas", initials: "DR", tone: "from-amber-500 to-orange-600" },
-  3: { name: "Robert Kiyosaki", role: "Ativos x Passivos", initials: "RK", tone: "from-violet-500 to-fuchsia-600" },
-  4: { name: "Nathália Arcuri", role: "Me Poupe na prática", initials: "NA", tone: "from-pink-500 to-rose-600" },
-  5: { name: "Thiago Nigro", role: "Investidor Inteligente", initials: "TN", tone: "from-sky-500 to-indigo-600" },
+  3: { name: "Tiago Nigro", role: "Multiplicar Renda", initials: "TN", tone: "from-sky-500 to-indigo-600" },
+  4: { name: "Bruno Perini", role: "Estoicismo Financeiro", initials: "BP", tone: "from-slate-500 to-zinc-700" },
+  5: { name: "Pablo Marçal", role: "Mentalidade Próspera", initials: "PM", tone: "from-red-500 to-rose-600" },
+  6: { name: "Robert Kiyosaki", role: "Ativos x Passivos", initials: "RK", tone: "from-violet-500 to-fuchsia-600" },
+  7: { name: "Morgan Housel", role: "Psicologia do Dinheiro", initials: "MH", tone: "from-cyan-500 to-blue-600" },
+  8: { name: "Warren Buffett", role: "Investidor Simples", initials: "WB", tone: "from-amber-600 to-yellow-700" },
+  9: { name: "Síntese Final", role: "Mentalidade Vencedora", initials: "★", tone: "from-primary to-primary" },
 };
 
-const getMentor = (day: number) => MENTORS[day] ?? MENTORS[1];
+/**
+ * Mapeia cada dia (1-21) para o capítulo/mentor do ebook matriz.
+ */
+const DAY_TO_CHAPTER: Record<number, number> = {
+  1: 1,
+  2: 2, 3: 2, 4: 2,
+  5: 3, 6: 3, 7: 3,
+  8: 4, 9: 4, 10: 4,
+  11: 5, 12: 5, 13: 5,
+  14: 6, 15: 6, 16: 6,
+  17: 7, 18: 7,
+  19: 8, 20: 8,
+  21: 9,
+};
+
+const getMentor = (day: number) => MENTORS[DAY_TO_CHAPTER[day] ?? 1] ?? MENTORS[1];
 
 /** Mensagens de impacto por etapa — gatilhos emocionais alinhados ao sumário. */
 function pickMessage(opts: {
@@ -124,7 +145,7 @@ export function MentorCard() {
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-bold leading-tight">{mentor.name}</p>
           <p className="flex items-center gap-1 truncate text-[11px] text-muted-foreground">
-            <BookOpen className="h-3 w-3" /> Cap. {currentDay} • {mentor.role}
+            <BookOpen className="h-3 w-3" /> Cap. {DAY_TO_CHAPTER[currentDay] ?? 1} • {mentor.role}
           </p>
         </div>
         <div className="flex shrink-0 items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-semibold text-primary">
