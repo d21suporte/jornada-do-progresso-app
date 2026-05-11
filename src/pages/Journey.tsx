@@ -90,9 +90,6 @@ const Journey = () => {
       </section>
 
       <Day1Experience open={openDay === 1} onOpenChange={(o) => !o && setOpenDay(null)} />
-      <Day2Experience open={openDay === 2} onOpenChange={(o) => !o && setOpenDay(null)} />
-      <Day3Experience open={openDay === 3} onOpenChange={(o) => !o && setOpenDay(null)} />
-      <Day4Experience open={openDay === 4} onOpenChange={(o) => !o && setOpenDay(null)} />
 
       <Sheet open={openDay !== null && ![1, 2, 3, 4].includes(openDay)} onOpenChange={(o) => !o && setOpenDay(null)}>
         <SheetContent side="bottom" className="rounded-t-3xl border-0 pb-8">
