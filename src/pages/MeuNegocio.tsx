@@ -551,6 +551,9 @@ const MeuNegocio = () => {
           {cat === "produtos" && <ProdutosTab />}
           {cat === "servicos" && <ServicosTab />}
           {cat === "info" && <InfoTab />}
+          {cat === "vendas" && (
+            <SalesView sales={sales} setSales={setSales} products={infos} />
+          )}
         </div>
       )}
     </MobileShell>
