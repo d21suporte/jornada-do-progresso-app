@@ -204,7 +204,7 @@ function parseCSV(text: string): Record<string, string>[] {
 }
 
 // ============================================================
-type Cat = "produtos" | "servicos" | "info" | null;
+type Cat = "produtos" | "servicos" | "info" | "vendas" | null;
 
 const MeuNegocio = () => {
   const [cat, setCat] = useState<Cat>(null);
@@ -213,7 +213,7 @@ const MeuNegocio = () => {
   const [products, setProducts] = useStorage<Product[]>("d21.mn.products", []);
   const [services, setServices] = useStorage<Service[]>("d21.mn.services", []);
   const [infos, setInfos] = useStorage<Infoproduct[]>("d21.mn.infoproducts", []);
-  const [sales] = useStorage<Sale[]>("d21.mn.sales", []);
+  const [sales, setSales] = useStorage<Sale[]>("d21.mn.sales", []);
   const [extraPlatforms] = useStorage<string[]>("d21.mn.platforms", []);
   const platforms = [...FIXED_PLATFORMS, ...extraPlatforms];
 
@@ -388,7 +388,7 @@ const MeuNegocio = () => {
                 count={sales.filter((s) => s.status === "Pago").length}
                 countLabel="Vendas realizadas"
                 addLabel="Adicionar Venda"
-                onOpen={() => setSaleOpen(true)}
+                onOpen={() => setCat("vendas")}
                 onAdd={() => setSaleOpen(true)}
               />
             </div>
@@ -551,6 +551,9 @@ const MeuNegocio = () => {
           {cat === "produtos" && <ProdutosTab />}
           {cat === "servicos" && <ServicosTab />}
           {cat === "info" && <InfoTab />}
+          {cat === "vendas" && (
+            <SalesView sales={sales} setSales={setSales} products={infos} />
+          )}
         </div>
       )}
     </MobileShell>
