@@ -632,14 +632,6 @@ function CatCard({
       <div className="absolute right-2 top-2 z-10 flex items-center gap-0.5">
         <button
           type="button"
-          aria-label={addLabel}
-          onClick={onAdd}
-          className="mr-1 flex h-7 w-7 items-center justify-center rounded-full bg-emerald-500 text-white shadow-md hover:bg-emerald-600"
-        >
-          <Plus className="h-4 w-4" strokeWidth={3} />
-        </button>
-        <button
-          type="button"
           aria-label={`Áudio de ${label}`}
           onClick={() => toast.info(`Áudio-tutorial de ${label}: em breve`)}
           className={iconBtn}
