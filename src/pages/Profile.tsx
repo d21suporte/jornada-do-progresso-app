@@ -4,7 +4,7 @@ import { useUser, useJourney, useTransactions } from "@/hooks/useFinance";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { LogOut, User as UserIcon, Globe, KeyRound, Trash2, Database, Download, Upload, RefreshCw } from "lucide-react";
+import { LogOut, Camera, Globe, KeyRound, Trash2, Database, Download, Upload, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { endSession } from "@/hooks/useSession";
 import { useNavigate } from "@/lib/router-compat";
