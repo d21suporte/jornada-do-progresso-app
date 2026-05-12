@@ -84,7 +84,9 @@ const Reports = () => {
   const { transactions, totals } = useTransactions();
   const { progress } = useJourney();
   const [bizSales] = useStorage<BizSale[]>("d21.mn.sales", []);
-  const [customers] = useStorage<Customer[]>("d21.mn.customers", []);
+  const [bizProducts] = useStorage<unknown[]>("d21.mn.products", []);
+  const [bizServices] = useStorage<unknown[]>("d21.mn.services", []);
+  const [bizInfos] = useStorage<unknown[]>("d21.mn.infoproducts", []);
   const [incorporate, setIncorporate] = useStorage<boolean>("d21.mn.incorporate", false);
   const day1 = useDay1();
 
