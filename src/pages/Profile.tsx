@@ -97,9 +97,28 @@ const Profile = () => {
   return (
     <MobileShell>
       <section className="flex flex-col items-center rounded-3xl gradient-card p-6 text-primary-foreground shadow-elevated">
-        <div className="flex h-20 w-20 items-center justify-center rounded-full bg-white/20 backdrop-blur">
-          <UserIcon className="h-10 w-10" />
-        </div>
+        <button
+          type="button"
+          onClick={() => fileInputRef.current?.click()}
+          aria-label="Trocar foto de perfil"
+          className="group relative flex h-20 w-20 items-center justify-center overflow-hidden rounded-full bg-white/20 backdrop-blur transition hover:bg-white/30"
+        >
+          {user.avatar ? (
+            <img src={user.avatar} alt="Foto de perfil" className="h-full w-full object-cover" />
+          ) : (
+            <Camera className="h-9 w-9" />
+          )}
+          <span className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition group-hover:opacity-100">
+            <Camera className="h-7 w-7 text-white" />
+          </span>
+        </button>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={handleAvatarChange}
+        />
         <p className="mt-3 text-lg font-bold">{user.name || "Visitante"}</p>
         <p className="text-sm opacity-90">{user.email || "sem email"}</p>
 
