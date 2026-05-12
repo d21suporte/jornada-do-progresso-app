@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { MobileShell } from "@/components/MobileShell";
 import { useUser, useJourney, useTransactions } from "@/hooks/useFinance";
 import { Input } from "@/components/ui/input";
