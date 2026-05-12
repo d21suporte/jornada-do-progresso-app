@@ -32,23 +32,11 @@ import {
   Wrench,
   GraduationCap,
   Briefcase,
-  Users,
   Target,
   Pencil,
+  ShoppingCart,
 } from "lucide-react";
 import { JOURNEY_DAYS } from "@/data/journey";
-
-type Customer = {
-  id: string;
-  name: string;
-  email?: string;
-  phone?: string;
-  doc?: string;
-  createdAt: string;
-  lastSaleAt: string;
-  salesCount: number;
-  totalSpent: number;
-};
 
 type BizSale = {
   id: string;
@@ -84,7 +72,9 @@ const Reports = () => {
   const { transactions, totals } = useTransactions();
   const { progress } = useJourney();
   const [bizSales] = useStorage<BizSale[]>("d21.mn.sales", []);
-  const [customers] = useStorage<Customer[]>("d21.mn.customers", []);
+  const [bizProducts] = useStorage<unknown[]>("d21.mn.products", []);
+  const [bizServices] = useStorage<unknown[]>("d21.mn.services", []);
+  const [bizInfos] = useStorage<unknown[]>("d21.mn.infoproducts", []);
   const [incorporate, setIncorporate] = useStorage<boolean>("d21.mn.incorporate", false);
   const day1 = useDay1();
 
@@ -487,12 +477,12 @@ const Reports = () => {
         )}
       </section>
 
-      {/* Meus Negócios — relatório de ativos */}
+      {/* Meus Negócios — relatório de ativos cadastrados */}
       <section className="mt-5 rounded-3xl bg-card p-5 shadow-soft">
         <header className="mb-3 flex items-center justify-between">
           <div>
             <h2 className="text-base font-semibold">Meus Negócios</h2>
-            <p className="text-xs text-muted-foreground">Receita potencial dos seus ativos</p>
+            <p className="text-xs text-muted-foreground">Ativos cadastrados por categoria</p>
           </div>
           <Briefcase className="h-5 w-5 text-primary" />
         </header>
@@ -501,133 +491,122 @@ const Reports = () => {
           <div>
             <p className="text-xs font-semibold">Incorporar saldo dos negócios</p>
             <p className="text-[10px] text-muted-foreground">
-              Soma a receita dos ativos ao saldo geral
+              Soma a receita das vendas realizadas ao saldo geral
             </p>
           </div>
           <Switch checked={incorporate} onCheckedChange={setIncorporate} />
         </div>
 
+        {(() => {
+          const assetCounts = [
+            { name: "Produtos", count: bizProducts.length, color: "hsl(152 70% 42%)" },
+            { name: "Serviços", count: bizServices.length, color: "hsl(217 91% 55%)" },
+            { name: "Infoprodutos", count: bizInfos.length, color: "hsl(270 70% 55%)" },
+          ];
+          const totalAssets = assetCounts.reduce((s, a) => s + a.count, 0);
+          if (totalAssets === 0) {
+            return (
+              <p className="py-6 text-center text-sm text-muted-foreground">
+                Cadastre ativos em "Meu Negócio" para ver os relatórios.
+              </p>
+            );
+          }
+          return (
+            <>
+              <div className="grid grid-cols-3 gap-2">
+                <div className="rounded-2xl bg-emerald-500/10 p-3 text-center">
+                  <Package className="mx-auto h-4 w-4 text-emerald-600" />
+                  <p className="mt-1 text-lg font-extrabold text-emerald-700">{assetCounts[0].count}</p>
+                  <p className="text-[10px] uppercase text-muted-foreground">Produtos</p>
+                </div>
+                <div className="rounded-2xl bg-blue-500/10 p-3 text-center">
+                  <Wrench className="mx-auto h-4 w-4 text-blue-600" />
+                  <p className="mt-1 text-lg font-extrabold text-blue-700">{assetCounts[1].count}</p>
+                  <p className="text-[10px] uppercase text-muted-foreground">Serviços</p>
+                </div>
+                <div className="rounded-2xl bg-violet-500/10 p-3 text-center">
+                  <GraduationCap className="mx-auto h-4 w-4 text-violet-600" />
+                  <p className="mt-1 text-lg font-extrabold text-violet-700">{assetCounts[2].count}</p>
+                  <p className="text-[10px] uppercase text-muted-foreground">Infoprodutos</p>
+                </div>
+              </div>
+
+              <div className="mt-4 h-56">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={assetCounts} margin={{ top: 8, right: 8, bottom: 0, left: 4 }}>
+                    <CartesianGrid stroke="hsl(var(--border))" strokeDasharray="3 3" vertical={false} opacity={0.5} />
+                    <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={11} tickLine={false} axisLine={false} />
+                    <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} tickLine={false} axisLine={false} width={40} allowDecimals={false} />
+                    <Tooltip formatter={(v: number) => `${v} ativo${v === 1 ? "" : "s"}`} />
+                    <Bar dataKey="count" radius={[8, 8, 0, 0]} maxBarSize={48}>
+                      {assetCounts.map((a, i) => (
+                        <Cell key={i} fill={a.color} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </>
+          );
+        })()}
+      </section>
+
+      {/* Vendas realizadas */}
+      <section className="mt-5 rounded-3xl bg-card p-5 shadow-soft">
+        <header className="mb-3 flex items-center justify-between">
+          <div>
+            <h2 className="text-base font-semibold">Vendas realizadas</h2>
+            <p className="text-xs text-muted-foreground">
+              Dado consolidado — incorporado ao saldo geral quando o botão acima está ativo.
+            </p>
+          </div>
+          <ShoppingCart className="h-5 w-5 text-primary" />
+        </header>
+
         {bizSummary.total === 0 ? (
           <p className="py-6 text-center text-sm text-muted-foreground">
-            Cadastre ativos em "Meu Negócio" para ver os relatórios.
+            Nenhuma venda registrada ainda.
           </p>
         ) : (
           <>
             <div className="grid grid-cols-3 gap-2">
-              <div className="rounded-2xl bg-emerald-500/10 p-3 text-center">
-                <Package className="mx-auto h-4 w-4 text-emerald-600" />
-                <p className="mt-1 text-lg font-extrabold text-emerald-700">
-                  {bizSummary.byCat[0].count}
-                </p>
-                <p className="text-[10px] uppercase text-muted-foreground">Produtos</p>
+              <div className="rounded-xl bg-muted/40 p-3 text-center">
+                <p className="text-[10px] uppercase text-muted-foreground">Vendas</p>
+                <p className="text-base font-bold text-foreground">{bizSummary.total}</p>
               </div>
-              <div className="rounded-2xl bg-blue-500/10 p-3 text-center">
-                <Wrench className="mx-auto h-4 w-4 text-blue-600" />
-                <p className="mt-1 text-lg font-extrabold text-blue-700">
-                  {bizSummary.byCat[1].count}
-                </p>
-                <p className="text-[10px] uppercase text-muted-foreground">Serviços</p>
+              <div className="rounded-xl bg-muted/40 p-3 text-center">
+                <p className="text-[10px] uppercase text-muted-foreground">Receita</p>
+                <p className="text-base font-bold text-emerald-600">{formatCurrency(bizSummary.receita)}</p>
               </div>
-              <div className="rounded-2xl bg-violet-500/10 p-3 text-center">
-                <GraduationCap className="mx-auto h-4 w-4 text-violet-600" />
-                <p className="mt-1 text-lg font-extrabold text-violet-700">
-                  {bizSummary.byCat[2].count}
-                </p>
-                <p className="text-[10px] uppercase text-muted-foreground">Infoprodutos</p>
-              </div>
-            </div>
-
-            <div className="mt-4 grid grid-cols-2 gap-2">
-              <div className="rounded-xl bg-muted/40 p-3">
-                <p className="text-[10px] uppercase text-muted-foreground">Receita potencial</p>
-                <p className="text-base font-bold text-emerald-600">
-                  {formatCurrency(bizSummary.receita)}
-                </p>
-              </div>
-              <div className="rounded-xl bg-muted/40 p-3">
-                <p className="text-[10px] uppercase text-muted-foreground">Margem média</p>
-                <p className="text-base font-bold text-primary">
-                  {bizSummary.margemMedia.toFixed(0)}%
-                </p>
+              <div className="rounded-xl bg-muted/40 p-3 text-center">
+                <p className="text-[10px] uppercase text-muted-foreground">Margem</p>
+                <p className="text-base font-bold text-primary">{bizSummary.margemMedia.toFixed(0)}%</p>
               </div>
             </div>
 
             <div className="mt-4 h-56">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={bizSummary.byCat} margin={{ top: 8, right: 8, bottom: 0, left: 4 }}>
-                  <CartesianGrid
-                    stroke="hsl(var(--border))"
-                    strokeDasharray="3 3"
-                    vertical={false}
-                    opacity={0.5}
-                  />
-                  <XAxis
-                    dataKey="name"
-                    stroke="hsl(var(--muted-foreground))"
-                    fontSize={11}
-                    tickLine={false}
-                    axisLine={false}
-                  />
+                  <CartesianGrid stroke="hsl(var(--border))" strokeDasharray="3 3" vertical={false} opacity={0.5} />
+                  <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={11} tickLine={false} axisLine={false} />
                   <YAxis
                     stroke="hsl(var(--muted-foreground))"
                     fontSize={11}
                     tickLine={false}
                     axisLine={false}
                     width={56}
-                    tickFormatter={(v: number) =>
-                      Math.abs(v) >= 1000 ? `R$${(v / 1000).toFixed(1)}k` : `R$${v}`
-                    }
+                    tickFormatter={(v: number) => (Math.abs(v) >= 1000 ? `R$${(v / 1000).toFixed(1)}k` : `R$${v}`)}
                   />
                   <Tooltip formatter={(v: number) => formatCurrency(v)} />
                   <Bar dataKey="value" radius={[8, 8, 0, 0]} maxBarSize={48}>
                     {bizSummary.byCat.map((_, i) => (
-                      <Cell
-                        key={i}
-                        fill={["hsl(152 70% 42%)", "hsl(217 91% 55%)", "hsl(270 70% 55%)"][i]}
-                      />
+                      <Cell key={i} fill={["hsl(152 70% 42%)", "hsl(217 91% 55%)", "hsl(270 70% 55%)"][i % 3]} />
                     ))}
                   </Bar>
                 </BarChart>
               </ResponsiveContainer>
             </div>
           </>
-        )}
-      </section>
-
-      {/* Base de Clientes (gerada pelas vendas) */}
-      <section className="mt-5 rounded-3xl bg-card p-5 shadow-soft">
-        <header className="mb-3 flex items-center justify-between">
-          <div>
-            <h2 className="text-base font-semibold">Base de clientes</h2>
-            <p className="text-xs text-muted-foreground">
-              Gerada automaticamente a partir das suas vendas (armazenada localmente).
-            </p>
-          </div>
-          <Users className="h-5 w-5 text-primary" />
-        </header>
-        {customers.length === 0 ? (
-          <p className="py-6 text-center text-sm text-muted-foreground">
-            Nenhum cliente ainda — registre uma venda em "Meu Negócio" para começar.
-          </p>
-        ) : (
-          <ul className="divide-y divide-border">
-            {customers.slice(0, 20).map((c) => (
-              <li key={c.id} className="flex items-center justify-between gap-3 py-3">
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-semibold">{c.name}</p>
-                  <p className="truncate text-[11px] text-muted-foreground">
-                    {[c.phone, c.doc, c.email].filter(Boolean).join(" • ") || "—"}
-                  </p>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm font-bold text-emerald-600">{formatCurrency(c.totalSpent)}</p>
-                  <p className="text-[10px] text-muted-foreground">
-                    {c.salesCount} {c.salesCount === 1 ? "compra" : "compras"}
-                  </p>
-                </div>
-              </li>
-            ))}
-          </ul>
         )}
       </section>
 
