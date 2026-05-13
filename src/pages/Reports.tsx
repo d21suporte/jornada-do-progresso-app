@@ -487,16 +487,6 @@ const Reports = () => {
           <Briefcase className="h-5 w-5 text-primary" />
         </header>
 
-        <div className="mb-3 flex items-center justify-between rounded-xl bg-muted/40 px-3 py-2">
-          <div>
-            <p className="text-xs font-semibold">Incorporar saldo dos negócios</p>
-            <p className="text-[10px] text-muted-foreground">
-              Soma a receita das vendas realizadas ao saldo geral
-            </p>
-          </div>
-          <Switch checked={incorporate} onCheckedChange={setIncorporate} />
-        </div>
-
         {(() => {
           const assetCounts = [
             { name: "Produtos", count: bizProducts.length, color: "hsl(152 70% 42%)" },
@@ -557,11 +547,21 @@ const Reports = () => {
           <div>
             <h2 className="text-base font-semibold">Vendas realizadas</h2>
             <p className="text-xs text-muted-foreground">
-              Dado consolidado — incorporado ao saldo geral quando o botão acima está ativo.
+              Dado consolidado — pode ser incorporado ao saldo geral.
             </p>
           </div>
           <ShoppingCart className="h-5 w-5 text-primary" />
         </header>
+
+        <div className="mb-3 flex items-center justify-between rounded-xl bg-muted/40 px-3 py-2">
+          <div>
+            <p className="text-xs font-semibold">Incorporar vendas ao saldo geral</p>
+            <p className="text-[10px] text-muted-foreground">
+              Soma a receita das vendas realizadas ao saldo geral
+            </p>
+          </div>
+          <Switch checked={incorporate} onCheckedChange={setIncorporate} />
+        </div>
 
         {bizSummary.total === 0 ? (
           <p className="py-6 text-center text-sm text-muted-foreground">
