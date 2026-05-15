@@ -165,8 +165,12 @@ export function TopBar() {
       {/* User info bar */}
       <div className="mx-auto max-w-md px-5 pb-3 pt-3">
         <div className="flex items-center gap-3 rounded-2xl bg-card p-3 shadow-soft">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full gradient-primary text-sm font-bold text-primary-foreground">
-            {initials}
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full gradient-primary text-sm font-bold text-primary-foreground">
+            {user.avatar ? (
+              <img src={user.avatar} alt="Foto de perfil" className="h-full w-full object-cover" />
+            ) : (
+              initials
+            )}
           </div>
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-semibold leading-tight">{displayName || "Visitante"}</p>
