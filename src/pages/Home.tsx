@@ -83,37 +83,81 @@ const Home = () => {
 
   return (
     <MobileShell>
-      {/* SALDO */}
-      <section className="relative overflow-hidden rounded-3xl gradient-card p-6 text-primary-foreground shadow-elevated">
-        <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/10 blur-2xl" />
-        <div className="flex items-center gap-2 text-xs font-medium opacity-90">
-          <Wallet className="h-4 w-4" />
-          <span>Saldo atual</span>
-        </div>
-        <p className="mt-1 text-4xl font-bold tracking-tight">{formatCurrency(totals.balance)}</p>
-        <p className="mt-1 text-[11px] font-medium opacity-80">
-          {balancePositive ? "Você está no controle. Continue assim." : "Atenção: o vermelho é um aviso, não uma sentença."}
-        </p>
+      {/* SALDO — cartão escuro com borda dourada */}
+      <section
+        className="relative overflow-hidden rounded-[1.75rem] p-[1.5px] shadow-elevated"
+        style={{
+          background:
+            "linear-gradient(135deg, rgba(212,165,70,0.9) 0%, rgba(120,80,20,0.25) 35%, rgba(60,40,10,0.15) 60%, rgba(212,165,70,0.85) 100%)",
+        }}
+      >
+        <div
+          className="relative overflow-hidden rounded-[1.65rem] p-6 text-white"
+          style={{
+            background:
+              "radial-gradient(120% 80% at 0% 0%, rgba(60,40,15,0.55) 0%, rgba(10,10,10,0.95) 55%, #050505 100%)",
+          }}
+        >
+          {/* brilho dourado sutil topo */}
+          <div className="pointer-events-none absolute inset-x-10 top-0 h-px bg-gradient-to-r from-transparent via-amber-300/70 to-transparent" />
+          {/* carteira decorativa */}
+          <Wallet
+            className="pointer-events-none absolute -right-4 -top-2 h-36 w-36 rotate-[-8deg] text-amber-400/25"
+            strokeWidth={1.1}
+          />
 
-        <div className="mt-5 grid grid-cols-2 gap-3">
-          <div className="rounded-2xl border-l-4 border-success bg-white/15 p-3 backdrop-blur">
-            <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide opacity-95">
-              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-success/90">
-                <ArrowUpRight className="h-3 w-3 text-white" strokeWidth={3} />
-              </span>
-              Entradas
-            </div>
-            <p className="mt-1.5 text-lg font-bold leading-tight">{formatCurrency(totals.income)}</p>
+          <div className="flex items-center gap-2 text-xs font-medium text-amber-200/90">
+            <span className="flex h-6 w-6 items-center justify-center rounded-md border border-amber-400/60 bg-amber-400/5">
+              <Wallet className="h-3.5 w-3.5 text-amber-300" strokeWidth={2} />
+            </span>
+            <span className="tracking-wide">Saldo atual</span>
           </div>
-          <div className="rounded-2xl border-l-4 border-danger bg-white/15 p-3 backdrop-blur">
-            <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide opacity-95">
-              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-danger/90">
-                <ArrowDownRight className="h-3 w-3 text-white" strokeWidth={3} />
-              </span>
-              Saídas
+
+          <p className="mt-2 text-4xl font-bold tracking-tight text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.5)]">
+            {formatCurrency(totals.balance)}
+          </p>
+          <p className="mt-1 text-[12px] font-medium text-white/55">
+            {balancePositive
+              ? "Você está no controle. Continue assim."
+              : "Atenção: o vermelho é um aviso, não uma sentença."}
+          </p>
+
+          <div className="relative mt-5 grid grid-cols-2 gap-3">
+            {/* Entradas */}
+            <div className="rounded-2xl border border-emerald-500/40 bg-emerald-500/5 p-3 backdrop-blur-sm">
+              <div className="flex items-center gap-2">
+                <span className="flex h-8 w-8 items-center justify-center rounded-full border border-emerald-400/60 bg-emerald-500/10">
+                  <ArrowDownRight className="h-4 w-4 text-emerald-400" strokeWidth={2.2} />
+                </span>
+                <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-white/85">
+                  Entradas
+                </span>
+              </div>
+              <p className="mt-2 text-lg font-bold leading-tight text-white">
+                {formatCurrency(totals.income)}
+              </p>
+              <p className="mt-0.5 text-[10px] text-white/45">Total recebido</p>
             </div>
-            <p className="mt-1.5 text-lg font-bold leading-tight">{formatCurrency(totals.expense)}</p>
+
+            {/* Saídas */}
+            <div className="rounded-2xl border border-red-500/40 bg-red-500/5 p-3 backdrop-blur-sm">
+              <div className="flex items-center gap-2">
+                <span className="flex h-8 w-8 items-center justify-center rounded-full border border-red-400/60 bg-red-500/10">
+                  <ArrowUpRight className="h-4 w-4 text-red-400" strokeWidth={2.2} />
+                </span>
+                <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-white/85">
+                  Saídas
+                </span>
+              </div>
+              <p className="mt-2 text-lg font-bold leading-tight text-white">
+                {formatCurrency(totals.expense)}
+              </p>
+              <p className="mt-0.5 text-[10px] text-white/45">Total gasto</p>
+            </div>
           </div>
+
+          {/* brilho dourado sutil base */}
+          <div className="pointer-events-none absolute inset-x-10 bottom-0 h-px bg-gradient-to-r from-transparent via-amber-300/60 to-transparent" />
         </div>
       </section>
 
