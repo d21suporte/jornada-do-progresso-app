@@ -72,6 +72,7 @@ const COLOR_BALANCE = "hsl(217 91% 55%)"; // azul — confiança, saldo
 
 const Reports = () => {
   const { transactions, totals } = useTransactions();
+  const { format: formatCurrency } = useCurrency();
   const { progress } = useJourney();
   const [bizSales] = useStorage<BizSale[]>("d21.mn.sales", []);
   const [bizProducts] = useStorage<unknown[]>("d21.mn.products", []);
