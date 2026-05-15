@@ -1,5 +1,6 @@
 import { MobileShell } from "@/components/MobileShell";
-import { useTransactions, useJourney, formatCurrency } from "@/hooks/useFinance";
+import { useTransactions, useJourney } from "@/hooks/useFinance";
+import { useCurrency } from "@/hooks/useCurrency";
 import { useStorage } from "@/hooks/useStorage";
 import { useDay1 } from "@/hooks/useDay1";
 import { Switch } from "@/components/ui/switch";
