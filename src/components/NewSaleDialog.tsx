@@ -266,7 +266,7 @@ export function NewSaleDialog({
       phone: incoming.phone,
       cpf: incoming.doc,
     };
-    setSales([sale, ...sales]);
+    setSales((prev) => [sale, ...prev]);
     toast.success("Venda registrada");
     close(false);
   };
