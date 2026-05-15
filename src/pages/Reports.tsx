@@ -37,6 +37,7 @@ import {
   ShoppingCart,
 } from "lucide-react";
 import { JOURNEY_DAYS } from "@/data/journey";
+import { getBusinessSalesTotal, isPaidBusinessSale } from "@/lib/businessFinance";
 
 type BizSale = {
   id: string;
@@ -79,9 +80,9 @@ const Reports = () => {
   const day1 = useDay1();
 
   const bizSummary = useMemo(() => {
-    const paid = bizSales.filter((s) => s.status === "Pago");
-    const faturamento = paid.reduce((s, x) => s + (x.amount || 0), 0);
-    const lucro = paid.reduce((s, x) => s + (x.profit ?? x.amount ?? 0), 0);
+    const paid = bizSales.filter(isPaidBusinessSale);
+    const faturamento = getBusinessSalesTotal(paid);
+    const lucro = paid.reduce((s, x) => s + (Number(x.profit ?? x.amount) || 0), 0);
     const byCatMap = new Map<string, { value: number; count: number }>();
     for (const s of paid) {
       const cat =
@@ -93,8 +94,8 @@ const Reports = () => {
               ? "Infoprodutos"
               : "Outros";
       const cur = byCatMap.get(cat) ?? { value: 0, count: 0 };
-      cur.value += s.amount || 0;
-      cur.count += s.quantity ?? 1;
+      cur.value += Number(s.amount) || 0;
+      cur.count += Number(s.quantity) || 1;
       byCatMap.set(cat, cur);
     }
     return {
@@ -107,15 +108,7 @@ const Reports = () => {
     };
   }, [bizSales]);
 
-  const displayTotals = useMemo(() => {
-    if (!incorporate) return totals;
-    const extra = bizSummary.receita;
-    return {
-      income: totals.income + extra,
-      expense: totals.expense,
-      balance: totals.balance + extra,
-    };
-  }, [incorporate, totals, bizSummary.receita]);
+  const displayTotals = totals;
 
   const byCategory = useMemo(() => {
     const map = new Map<string, number>();
