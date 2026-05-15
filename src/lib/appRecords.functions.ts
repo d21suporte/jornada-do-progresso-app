@@ -30,6 +30,18 @@ export const loadAppRecord = createServerFn({ method: "GET" })
     if (row && isMeaningfulData(row.data)) {
       return { found: true as const, data: row.data, updatedAt: row.updated_at };
     }
+    if (data.dataKey.startsWith("u:")) {
+      const { data: candidates, error: fallbackError } = await supabaseAdmin
+        .from("app_records")
+        .select("data, updated_at")
+        .eq("data_key", data.dataKey)
+        .order("updated_at", { ascending: false })
+        .limit(5);
+
+      if (fallbackError) throw new Error(fallbackError.message);
+      const fallback = candidates?.find((candidate) => isMeaningfulData(candidate.data));
+      if (fallback) return { found: true as const, data: fallback.data, updatedAt: fallback.updated_at };
+    }
     if (!row) return { found: false as const, data: null, updatedAt: null };
     return { found: true as const, data: row.data, updatedAt: row.updated_at };
   });
