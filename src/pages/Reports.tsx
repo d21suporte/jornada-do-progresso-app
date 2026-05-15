@@ -1,5 +1,6 @@
 import { MobileShell } from "@/components/MobileShell";
-import { useTransactions, useJourney, formatCurrency } from "@/hooks/useFinance";
+import { useTransactions, useJourney } from "@/hooks/useFinance";
+import { useCurrency } from "@/hooks/useCurrency";
 import { useStorage } from "@/hooks/useStorage";
 import { useDay1 } from "@/hooks/useDay1";
 import { Switch } from "@/components/ui/switch";
@@ -71,6 +72,7 @@ const COLOR_BALANCE = "hsl(217 91% 55%)"; // azul — confiança, saldo
 
 const Reports = () => {
   const { transactions, totals } = useTransactions();
+  const { format: formatCurrency } = useCurrency();
   const { progress } = useJourney();
   const [bizSales] = useStorage<BizSale[]>("d21.mn.sales", []);
   const [bizProducts] = useStorage<unknown[]>("d21.mn.products", []);
@@ -610,6 +612,7 @@ const Reports = () => {
 };
 
 function Day1ReminderSection({ day1 }: { day1: ReturnType<typeof useDay1> }) {
+  const { format: formatCurrency } = useCurrency();
   const [editing, setEditing] = useState(false);
   const [hasToday, setHasToday] = useState(day1.snapshot?.hasToday ?? 0);
   const [debt, setDebt] = useState(day1.snapshot?.debt ?? 0);
