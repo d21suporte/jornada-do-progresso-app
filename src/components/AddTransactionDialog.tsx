@@ -14,6 +14,7 @@ import { InfoHint } from "./InfoHint";
 import { getGroupInfo, getCategoryInfo } from "@/data/categoryInfo";
 import { ClassificationPicker } from "./ClassificationPicker";
 import { CurrencyInput } from "./CurrencyInput";
+import { CurrencySelect } from "./CurrencySelect";
 import { parseMaskedToNumber, formatNumberInput, useCurrency } from "@/hooks/useCurrency";
 
 interface Props {
@@ -202,12 +203,21 @@ export function AddTransactionDialog({ trigger, editing, open: controlledOpen, o
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="amount">Valor</Label>
-            <CurrencyInput
-              id="amount"
-              value={amount}
-              onChange={setAmount}
-            />
+            <div className="flex items-center justify-between gap-2">
+              <Label htmlFor="amount">Valor</Label>
+              <span className="text-[10px] text-muted-foreground">Moeda do app</span>
+            </div>
+            <div className="grid grid-cols-[1fr_auto] gap-2">
+              <CurrencyInput
+                id="amount"
+                value={amount}
+                onChange={setAmount}
+              />
+              <CurrencySelect className="h-12 w-[140px]" />
+            </div>
+            <p className="text-[10px] text-muted-foreground">
+              A moeda escolhida vale para todo o app (lançamentos, negócios, vendas e relatórios).
+            </p>
           </div>
 
           {/* Step 2: Group */}
