@@ -612,6 +612,7 @@ const Reports = () => {
 };
 
 function Day1ReminderSection({ day1 }: { day1: ReturnType<typeof useDay1> }) {
+  const { format: formatCurrency } = useCurrency();
   const [editing, setEditing] = useState(false);
   const [hasToday, setHasToday] = useState(day1.snapshot?.hasToday ?? 0);
   const [debt, setDebt] = useState(day1.snapshot?.debt ?? 0);
