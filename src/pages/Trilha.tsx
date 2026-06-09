@@ -196,19 +196,26 @@ const Trilha = () => {
 
       {active && (
         <div
-          className="fixed inset-0 z-50 flex flex-col bg-black/95 backdrop-blur"
-          onClick={() => setActiveId(null)}
+          ref={playerRef}
+          className="fixed inset-0 z-50 flex flex-col bg-black"
         >
-          <div className="flex items-center gap-3 p-4 text-white" onClick={(e) => e.stopPropagation()}>
-            <button onClick={() => setActiveId(null)} className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10">
+          <div className="flex items-center gap-3 p-3 text-white">
+            <button onClick={closePlayer} className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10">
               <ArrowLeft className="h-4 w-4" />
             </button>
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1">
               <p className="text-[10px] font-bold uppercase tracking-wide text-white/60">Dia {active.day}</p>
               <p className="truncate text-sm font-semibold">{active.title}</p>
             </div>
+            <button
+              onClick={closePlayer}
+              aria-label="Fechar"
+              className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10"
+            >
+              <X className="h-4 w-4" />
+            </button>
           </div>
-          <div className="flex flex-1 items-center justify-center px-4 pb-6" onClick={(e) => e.stopPropagation()}>
+          <div className="flex flex-1 items-center justify-center px-2 pb-2">
             <video
               ref={videoRef}
               src={active.videoUrl}
@@ -218,11 +225,12 @@ const Trilha = () => {
               playsInline
               autoPlay
               preload="metadata"
-              className="max-h-full w-full rounded-xl bg-black"
+              className="h-full max-h-full w-full rounded-lg bg-black object-contain"
             />
           </div>
         </div>
       )}
+
     </MobileShell>
   );
 };
