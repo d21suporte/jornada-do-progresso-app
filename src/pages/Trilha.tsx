@@ -268,7 +268,10 @@ const Trilha = () => {
         setCurrentTime(saved.position);
       }
     };
-    const onEnded = () => { save({ completed: true, position: v.duration }); void closePlayer(true); };
+    const onEnded = () => {
+      save({ completed: true, position: v.duration });
+      void closePlayer(true);
+    };
     const onPause = () => save();
     const onPlay = () => setIsPlaying(true);
     const onVideoPause = () => setIsPlaying(false);
@@ -323,7 +326,10 @@ const Trilha = () => {
   return (
     <MobileShell>
       <header className="mb-5 flex items-center gap-3">
-        <Link to="/" className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary text-primary shadow-soft">
+        <Link
+          to="/"
+          className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary text-primary shadow-soft"
+        >
           <ArrowLeft className="h-4 w-4" />
         </Link>
         <div>
@@ -343,12 +349,16 @@ const Trilha = () => {
                 onClick={() => openLesson(l.id)}
                 className="flex w-full items-center gap-3 rounded-2xl bg-card p-4 text-left shadow-soft transition-smooth active:scale-[0.98]"
               >
-                <div className={cn(
-                  "flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-2xl",
-                  status === "done" ? "bg-emerald-500/15 text-emerald-600"
-                    : status === "doing" ? "bg-primary/15 text-primary"
-                    : "bg-secondary text-secondary-foreground"
-                )}>
+                <div
+                  className={cn(
+                    "flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-2xl",
+                    status === "done"
+                      ? "bg-emerald-500/15 text-emerald-600"
+                      : status === "doing"
+                        ? "bg-primary/15 text-primary"
+                        : "bg-secondary text-secondary-foreground",
+                  )}
+                >
                   {l.imageUrl ? (
                     <img src={l.imageUrl} alt="" className="h-full w-full object-cover" />
                   ) : status === "done" ? (
@@ -364,14 +374,21 @@ const Trilha = () => {
                   <p className="truncate text-sm font-semibold">{l.title}</p>
                   <div className="mt-1.5 flex items-center gap-2">
                     <div className="h-1 flex-1 overflow-hidden rounded-full bg-primary/10">
-                      <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${pct}%` }} />
+                      <div
+                        className="h-full rounded-full bg-primary transition-all"
+                        style={{ width: `${pct}%` }}
+                      />
                     </div>
-                    <span className={cn(
-                      "text-[10px] font-bold uppercase tracking-wide",
-                      status === "done" ? "text-emerald-600"
-                        : status === "doing" ? "text-primary"
-                        : "text-muted-foreground"
-                    )}>
+                    <span
+                      className={cn(
+                        "text-[10px] font-bold uppercase tracking-wide",
+                        status === "done"
+                          ? "text-emerald-600"
+                          : status === "doing"
+                            ? "text-primary"
+                            : "text-muted-foreground",
+                      )}
+                    >
                       {status === "done" ? "Concluída" : status === "doing" ? "Em andamento" : "Não iniciada"}
                     </span>
                   </div>
