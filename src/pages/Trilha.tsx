@@ -104,10 +104,7 @@ const Trilha = () => {
   const [duration, setDuration] = useState(0);
   const [isMuted, setIsMuted] = useState(false);
   const [controlsVisible, setControlsVisible] = useState(true);
-  const active = useMemo(
-    () => LESSONS.find((l) => l.id === activeId) ?? null,
-    [activeId],
-  );
+  const active = useMemo(() => LESSONS.find((l) => l.id === activeId) ?? null, [activeId]);
   const videoRef = useRef<HTMLVideoElement>(null);
   const playerRef = useRef<HTMLDivElement>(null);
   const isClosingRef = useRef(false);
@@ -314,14 +311,17 @@ const Trilha = () => {
     revealControls();
   }, [revealControls]);
 
-  const seekVideo = useCallback((value: string) => {
-    const v = videoRef.current;
-    if (!v) return;
-    const next = Number(value);
-    v.currentTime = next;
-    setCurrentTime(next);
-    revealControls();
-  }, [revealControls]);
+  const seekVideo = useCallback(
+    (value: string) => {
+      const v = videoRef.current;
+      if (!v) return;
+      const next = Number(value);
+      v.currentTime = next;
+      setCurrentTime(next);
+      revealControls();
+    },
+    [revealControls],
+  );
 
   return (
     <MobileShell>
