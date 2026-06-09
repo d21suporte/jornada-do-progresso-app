@@ -177,11 +177,6 @@ const Trilha = () => {
     const v = videoRef.current;
     if (!v || !active) return;
     const saved = progress[active.id];
-    const onLoaded = () => {
-      if (saved && saved.position > 0 && saved.position < (v.duration || Infinity) - 2) {
-        v.currentTime = saved.position;
-      }
-    };
     const save = (extra?: Partial<LessonProgress>) => saveProgress(active.id, extra);
     const onTime = () => {
       setCurrentTime(v.currentTime);
@@ -272,7 +267,7 @@ const Trilha = () => {
           return (
             <li key={l.id}>
               <button
-                onClick={() => setActiveId(l.id)}
+                onClick={() => openLesson(l.id)}
                 className="flex w-full items-center gap-3 rounded-2xl bg-card p-4 text-left shadow-soft transition-smooth active:scale-[0.98]"
               >
                 <div className={cn(
@@ -317,10 +312,15 @@ const Trilha = () => {
       {active && (
         <div
           ref={playerRef}
-          className="fixed inset-0 z-50 flex flex-col bg-black"
+          className="fixed inset-0 z-50 flex h-[100dvh] w-[100dvw] touch-none flex-col overflow-hidden bg-black text-white"
+          onClick={revealControls}
+          onPointerMove={revealControls}
         >
-          <div className="flex items-center gap-3 p-3 text-white">
-            <button onClick={closePlayer} className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10">
+          <div className={cn(
+            "pointer-events-none absolute inset-x-0 top-0 z-10 flex items-center gap-3 bg-gradient-to-b from-black/80 to-transparent p-3 transition-opacity duration-200",
+            controlsVisible ? "opacity-100" : "opacity-0"
+          )}>
+            <button onClick={(event) => { event.stopPropagation(); void closePlayer(); }} className="pointer-events-auto flex h-10 w-10 items-center justify-center rounded-full bg-white/12 backdrop-blur-md">
               <ArrowLeft className="h-4 w-4" />
             </button>
             <div className="min-w-0 flex-1">
@@ -328,25 +328,66 @@ const Trilha = () => {
               <p className="truncate text-sm font-semibold">{active.title}</p>
             </div>
             <button
-              onClick={closePlayer}
-              aria-label="Fechar"
-              className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10"
+              onClick={(event) => { event.stopPropagation(); void closePlayer(); }}
+              aria-label="Encerrar vídeo"
+              className="pointer-events-auto flex h-10 w-10 items-center justify-center rounded-full bg-white/12 backdrop-blur-md"
             >
               <X className="h-4 w-4" />
             </button>
           </div>
-          <div className="flex flex-1 items-center justify-center px-2 pb-2">
+          <div className="flex h-full w-full items-center justify-center bg-black">
             <video
               ref={videoRef}
               src={active.videoUrl}
               poster={active.imageUrl || undefined}
-              controls
               controlsList="nodownload"
               playsInline
               autoPlay
               preload="metadata"
-              className="h-full max-h-full w-full rounded-lg bg-black object-contain"
+              onClick={(event) => { event.stopPropagation(); togglePlay(); }}
+              className="aspect-video max-h-[100dvh] w-full max-w-[100dvw] bg-black object-contain"
             />
+          </div>
+          <div className={cn(
+            "pointer-events-none absolute inset-x-0 bottom-0 z-10 bg-gradient-to-t from-black/90 to-transparent px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-12 transition-opacity duration-200",
+            controlsVisible ? "opacity-100" : "opacity-0"
+          )}>
+            <div className="pointer-events-auto flex items-center gap-3">
+              <button
+                onClick={(event) => { event.stopPropagation(); togglePlay(); }}
+                aria-label={isPlaying ? "Pausar" : "Reproduzir"}
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white text-black"
+              >
+                {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4 fill-current" />}
+              </button>
+              <span className="w-11 text-xs font-medium tabular-nums text-white/75">{formatTime(currentTime)}</span>
+              <input
+                type="range"
+                min="0"
+                max={duration || 0}
+                step="0.1"
+                value={Math.min(currentTime, duration || currentTime)}
+                onClick={(event) => event.stopPropagation()}
+                onChange={(event) => seekVideo(event.target.value)}
+                aria-label="Progresso do vídeo"
+                className="h-1 min-w-0 flex-1 accent-white"
+              />
+              <span className="w-11 text-right text-xs font-medium tabular-nums text-white/75">{formatTime(duration)}</span>
+              <button
+                onClick={(event) => { event.stopPropagation(); toggleMute(); }}
+                aria-label={isMuted ? "Ativar som" : "Silenciar"}
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/12 backdrop-blur-md"
+              >
+                {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+              </button>
+              <button
+                onClick={(event) => { event.stopPropagation(); fullscreenRequestedRef.current = false; void enterImmersive(); }}
+                aria-label="Tela cheia"
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/12 backdrop-blur-md"
+              >
+                <Maximize2 className="h-4 w-4" />
+              </button>
+            </div>
           </div>
         </div>
       )}
