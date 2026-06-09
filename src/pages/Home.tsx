@@ -17,6 +17,11 @@ import { cn } from "@/lib/utils";
 
 const HOME_ACTIONS = [
   {
+    title: "Trilha de aprendizado",
+    to: "/trilha",
+    image: "https://jornadadoprogresso.com/wp-content/uploads/2026/04/sliderhome3.png",
+  },
+  {
     title: "Bônus Exclusivo",
     to: "/audios",
     image: "https://jornadadoprogresso.com/wp-content/uploads/2026/04/sliderhome1.png",
@@ -35,11 +40,6 @@ const HOME_ACTIONS = [
     title: "Calculadora",
     to: "/calculadora",
     image: "https://jornadadoprogresso.com/wp-content/uploads/2026/04/sliderhome2.png",
-  },
-  {
-    title: "Trilha de aprendizado",
-    to: "/audios",
-    image: "https://jornadadoprogresso.com/wp-content/uploads/2026/04/sliderhome3.png",
   },
 ];
 
