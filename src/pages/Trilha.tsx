@@ -140,7 +140,10 @@ const Trilha = () => {
   useEffect(() => {
     if (!active) return;
     const previousOverflow = document.body.style.overflow;
+    const previousHtmlOverflow = document.documentElement.style.overflow;
+    const scrollY = window.scrollY;
     document.body.style.overflow = "hidden";
+    document.documentElement.style.overflow = "hidden";
     const onFsChange = () => {
       if (!document.fullscreenElement && !isClosingRef.current) void closePlayer();
     };
@@ -153,6 +156,8 @@ const Trilha = () => {
       document.removeEventListener("fullscreenchange", onFsChange);
       document.removeEventListener("keydown", onKey);
       document.body.style.overflow = previousOverflow;
+      document.documentElement.style.overflow = previousHtmlOverflow;
+      window.scrollTo(0, scrollY);
       void exitImmersive();
     };
   }, [active, closePlayer, exitImmersive]);
@@ -177,19 +182,10 @@ const Trilha = () => {
         v.currentTime = saved.position;
       }
     };
-    const save = (extra?: Partial<LessonProgress>) => {
-      setProgress((prev) => ({
-        ...prev,
-        [active.id]: {
-          position: v.currentTime,
-          duration: v.duration || prev[active.id]?.duration || 0,
-          completed: extra?.completed ?? prev[active.id]?.completed ?? false,
-          updatedAt: Date.now(),
-          ...extra,
-        },
-      }));
-    };
+    const save = (extra?: Partial<LessonProgress>) => saveProgress(active.id, extra);
     const onTime = () => {
+      setCurrentTime(v.currentTime);
+      setDuration(v.duration || 0);
       if (!v.duration) return;
       // throttle by 3s
       const last = progress[active.id]?.updatedAt ?? 0;
@@ -197,21 +193,64 @@ const Trilha = () => {
       const done = v.currentTime / v.duration >= 0.95;
       save(done ? { completed: true } : undefined);
     };
-    const onEnded = () => save({ completed: true, position: v.duration });
+    const onLoaded = () => {
+      setDuration(v.duration || 0);
+      if (saved && saved.position > 0 && saved.position < (v.duration || Infinity) - 2) {
+        v.currentTime = saved.position;
+        setCurrentTime(saved.position);
+      }
+    };
+    const onEnded = () => { save({ completed: true, position: v.duration }); void closePlayer(true); };
     const onPause = () => save();
+    const onPlay = () => setIsPlaying(true);
+    const onVideoPause = () => setIsPlaying(false);
+    const onVolume = () => setIsMuted(v.muted);
 
     v.addEventListener("loadedmetadata", onLoaded);
     v.addEventListener("timeupdate", onTime);
     v.addEventListener("ended", onEnded);
     v.addEventListener("pause", onPause);
+    v.addEventListener("play", onPlay);
+    v.addEventListener("pause", onVideoPause);
+    v.addEventListener("volumechange", onVolume);
     return () => {
       v.removeEventListener("loadedmetadata", onLoaded);
       v.removeEventListener("timeupdate", onTime);
       v.removeEventListener("ended", onEnded);
       v.removeEventListener("pause", onPause);
+      v.removeEventListener("play", onPlay);
+      v.removeEventListener("pause", onVideoPause);
+      v.removeEventListener("volumechange", onVolume);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [active?.id]);
+
+  const revealControls = useCallback(() => setControlsVisible(true), []);
+
+  const togglePlay = useCallback(() => {
+    const v = videoRef.current;
+    if (!v) return;
+    revealControls();
+    if (v.paused) void v.play();
+    else v.pause();
+  }, [revealControls]);
+
+  const toggleMute = useCallback(() => {
+    const v = videoRef.current;
+    if (!v) return;
+    v.muted = !v.muted;
+    setIsMuted(v.muted);
+    revealControls();
+  }, [revealControls]);
+
+  const seekVideo = useCallback((value: string) => {
+    const v = videoRef.current;
+    if (!v) return;
+    const next = Number(value);
+    v.currentTime = next;
+    setCurrentTime(next);
+    revealControls();
+  }, [revealControls]);
 
   return (
     <MobileShell>
