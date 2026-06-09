@@ -44,6 +44,47 @@ const Trilha = () => {
   const [activeId, setActiveId] = useState<string | null>(null);
   const active = useMemo(() => LESSONS.find((l) => l.id === activeId) ?? null, [activeId]);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const playerRef = useRef<HTMLDivElement>(null);
+
+  const exitImmersive = useCallback(async () => {
+    try {
+      const so = (screen.orientation as ScreenOrientation & { unlock?: () => void }) | undefined;
+      so?.unlock?.();
+    } catch { /* noop */ }
+    try {
+      if (document.fullscreenElement) await document.exitFullscreen();
+    } catch { /* noop */ }
+  }, []);
+
+  const closePlayer = useCallback(() => {
+    void exitImmersive();
+    setActiveId(null);
+  }, [exitImmersive]);
+
+  // Enter fullscreen + lock landscape when a lesson opens
+  useEffect(() => {
+    if (!active) return;
+    const el = playerRef.current;
+    const tryEnter = async () => {
+      try {
+        if (el && !document.fullscreenElement) await el.requestFullscreen?.();
+      } catch { /* noop */ }
+      try {
+        const so = screen.orientation as ScreenOrientation & { lock?: (o: string) => Promise<void> };
+        await so?.lock?.("landscape");
+      } catch { /* device may not allow — fine */ }
+    };
+    void tryEnter();
+    const onFsChange = () => {
+      if (!document.fullscreenElement) closePlayer();
+    };
+    document.addEventListener("fullscreenchange", onFsChange);
+    return () => {
+      document.removeEventListener("fullscreenchange", onFsChange);
+      void exitImmersive();
+    };
+  }, [active, closePlayer, exitImmersive]);
+
 
   // resume + persist
   useEffect(() => {
