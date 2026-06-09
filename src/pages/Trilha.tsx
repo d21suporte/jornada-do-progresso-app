@@ -104,38 +104,48 @@ const Trilha = () => {
   const [duration, setDuration] = useState(0);
   const [isMuted, setIsMuted] = useState(false);
   const [controlsVisible, setControlsVisible] = useState(true);
-  const active = useMemo(() => LESSONS.find((l) => l.id === activeId) ?? null, [activeId]);
+  const active = useMemo(
+    () => LESSONS.find((l) => l.id === activeId) ?? null,
+    [activeId],
+  );
   const videoRef = useRef<HTMLVideoElement>(null);
   const playerRef = useRef<HTMLDivElement>(null);
   const isClosingRef = useRef(false);
   const fullscreenRequestedRef = useRef(false);
   const controlsTimerRef = useRef<number | null>(null);
 
-  const saveProgress = useCallback((lessonId: string, extra?: Partial<LessonProgress>) => {
-    const v = videoRef.current;
-    if (!v) return;
-    setProgress((prev) => ({
-      ...prev,
-      [lessonId]: {
-        position: v.currentTime,
-        duration: v.duration || prev[lessonId]?.duration || 0,
-        completed: extra?.completed ?? prev[lessonId]?.completed ?? false,
-        updatedAt: Date.now(),
-        ...extra,
-      },
-    }));
-  }, [setProgress]);
+  const saveProgress = useCallback(
+    (lessonId: string, extra?: Partial<LessonProgress>) => {
+      const v = videoRef.current;
+      if (!v) return;
+      setProgress((prev) => ({
+        ...prev,
+        [lessonId]: {
+          position: v.currentTime,
+          duration: v.duration || prev[lessonId]?.duration || 0,
+          completed: extra?.completed ?? prev[lessonId]?.completed ?? false,
+          updatedAt: Date.now(),
+          ...extra,
+        },
+      }));
+    },
+    [setProgress],
+  );
 
   const exitImmersive = useCallback(async () => {
     try {
       const so = screen.orientation as ScreenOrientation & { unlock?: () => void };
       so?.unlock?.();
-    } catch { /* noop */ }
+    } catch {
+      /* noop */
+    }
     try {
       const video = videoRef.current as FullscreenVideoElement | null;
       if (video?.webkitDisplayingFullscreen) video.webkitExitFullscreen?.();
       if (document.fullscreenElement) await document.exitFullscreen();
-    } catch { /* noop */ }
+    } catch {
+      /* noop */
+    }
     fullscreenRequestedRef.current = false;
   }, []);
 
