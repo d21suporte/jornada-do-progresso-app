@@ -342,9 +342,8 @@ const Trilha = () => {
         {LESSONS.map((l) => {
           const p = progress[l.id];
           const status = statusOf(p);
-          const pct = p && p.duration
-            ? Math.min(100, Math.round((p.position / p.duration) * 100))
-            : 0;
+          const pct =
+            p && p.duration ? Math.min(100, Math.round((p.position / p.duration) * 100)) : 0;
           return (
             <li key={l.id}>
               <button
