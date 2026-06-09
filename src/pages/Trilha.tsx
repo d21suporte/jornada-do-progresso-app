@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 import { MobileShell } from "@/components/MobileShell";
 import { useStorage } from "@/hooks/useStorage";
-import { ArrowLeft, CheckCircle2, Loader2, PlayCircle, X } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Loader2, Maximize2, Pause, Play, PlayCircle, Volume2, VolumeX, X } from "lucide-react";
 import { Link } from "@/lib/router-compat";
 import { cn } from "@/lib/utils";
 
@@ -32,6 +33,19 @@ type ProgressMap = Record<string, LessonProgress>;
 
 const STORAGE_KEY = "trilha.progress.v1";
 
+type FullscreenVideoElement = HTMLVideoElement & {
+  webkitEnterFullscreen?: () => void;
+  webkitExitFullscreen?: () => void;
+  webkitDisplayingFullscreen?: boolean;
+};
+
+function formatTime(seconds: number) {
+  if (!Number.isFinite(seconds) || seconds < 0) return "0:00";
+  const mins = Math.floor(seconds / 60);
+  const secs = Math.floor(seconds % 60).toString().padStart(2, "0");
+  return `${mins}:${secs}`;
+}
+
 function statusOf(p?: LessonProgress): "todo" | "doing" | "done" {
   if (!p) return "todo";
   if (p.completed) return "done";
@@ -42,9 +56,32 @@ function statusOf(p?: LessonProgress): "todo" | "doing" | "done" {
 const Trilha = () => {
   const [progress, setProgress] = useStorage<ProgressMap>(STORAGE_KEY, {});
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [isMuted, setIsMuted] = useState(false);
+  const [controlsVisible, setControlsVisible] = useState(true);
   const active = useMemo(() => LESSONS.find((l) => l.id === activeId) ?? null, [activeId]);
   const videoRef = useRef<HTMLVideoElement>(null);
   const playerRef = useRef<HTMLDivElement>(null);
+  const isClosingRef = useRef(false);
+  const fullscreenRequestedRef = useRef(false);
+  const controlsTimerRef = useRef<number | null>(null);
+
+  const saveProgress = useCallback((lessonId: string, extra?: Partial<LessonProgress>) => {
+    const v = videoRef.current;
+    if (!v) return;
+    setProgress((prev) => ({
+      ...prev,
+      [lessonId]: {
+        position: v.currentTime,
+        duration: v.duration || prev[lessonId]?.duration || 0,
+        completed: extra?.completed ?? prev[lessonId]?.completed ?? false,
+        updatedAt: Date.now(),
+        ...extra,
+      },
+    }));
+  }, [setProgress]);
 
   const exitImmersive = useCallback(async () => {
     try {
@@ -52,38 +89,82 @@ const Trilha = () => {
       so?.unlock?.();
     } catch { /* noop */ }
     try {
+      const video = videoRef.current as FullscreenVideoElement | null;
+      if (video?.webkitDisplayingFullscreen) video.webkitExitFullscreen?.();
       if (document.fullscreenElement) await document.exitFullscreen();
     } catch { /* noop */ }
+    fullscreenRequestedRef.current = false;
   }, []);
 
-  const closePlayer = useCallback(() => {
-    void exitImmersive();
+  const closePlayer = useCallback(async (completed = false) => {
+    if (isClosingRef.current) return;
+    isClosingRef.current = true;
+    const lessonId = active?.id;
+    const v = videoRef.current;
+    if (v) {
+      v.pause();
+      if (lessonId) saveProgress(lessonId, completed ? { completed: true, position: v.duration || v.currentTime } : undefined);
+    }
+    await exitImmersive();
     setActiveId(null);
-  }, [exitImmersive]);
+    setIsPlaying(false);
+    setCurrentTime(0);
+    setDuration(0);
+    window.setTimeout(() => { isClosingRef.current = false; }, 0);
+  }, [active?.id, exitImmersive, saveProgress]);
 
-  // Enter fullscreen + lock landscape when a lesson opens
+  const enterImmersive = useCallback(async () => {
+    if (fullscreenRequestedRef.current) return;
+    fullscreenRequestedRef.current = true;
+    const el = playerRef.current;
+    const video = videoRef.current as FullscreenVideoElement | null;
+    try {
+      if (el?.requestFullscreen && !document.fullscreenElement) {
+        await el.requestFullscreen();
+      } else if (video?.webkitEnterFullscreen) {
+        video.webkitEnterFullscreen();
+      }
+    } catch { /* mobile browser may block fullscreen */ }
+    try {
+      const so = screen.orientation as ScreenOrientation & { lock?: (orientation: string) => Promise<void> };
+      await so?.lock?.("landscape");
+    } catch { /* device may not allow orientation lock */ }
+  }, []);
+
+  const openLesson = useCallback((id: string) => {
+    flushSync(() => setActiveId(id));
+    setControlsVisible(true);
+    void enterImmersive();
+  }, [enterImmersive]);
+
   useEffect(() => {
     if (!active) return;
-    const el = playerRef.current;
-    const tryEnter = async () => {
-      try {
-        if (el && !document.fullscreenElement) await el.requestFullscreen?.();
-      } catch { /* noop */ }
-      try {
-        const so = screen.orientation as ScreenOrientation & { lock?: (o: string) => Promise<void> };
-        await so?.lock?.("landscape");
-      } catch { /* device may not allow — fine */ }
-    };
-    void tryEnter();
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
     const onFsChange = () => {
-      if (!document.fullscreenElement) closePlayer();
+      if (!document.fullscreenElement && !isClosingRef.current) void closePlayer();
+    };
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") void closePlayer();
     };
     document.addEventListener("fullscreenchange", onFsChange);
+    document.addEventListener("keydown", onKey);
     return () => {
       document.removeEventListener("fullscreenchange", onFsChange);
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = previousOverflow;
       void exitImmersive();
     };
   }, [active, closePlayer, exitImmersive]);
+
+  useEffect(() => {
+    if (!active || !controlsVisible) return;
+    if (controlsTimerRef.current) window.clearTimeout(controlsTimerRef.current);
+    controlsTimerRef.current = window.setTimeout(() => setControlsVisible(false), isPlaying ? 2600 : 5000);
+    return () => {
+      if (controlsTimerRef.current) window.clearTimeout(controlsTimerRef.current);
+    };
+  }, [active, controlsVisible, isPlaying]);
 
 
   // resume + persist
