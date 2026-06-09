@@ -48,7 +48,7 @@ const Trilha = () => {
 
   const exitImmersive = useCallback(async () => {
     try {
-      const so = (screen.orientation as ScreenOrientation & { unlock?: () => void }) | undefined;
+      const so = screen.orientation as ScreenOrientation & { unlock?: () => void };
       so?.unlock?.();
     } catch { /* noop */ }
     try {
