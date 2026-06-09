@@ -18,7 +18,7 @@ const Profile = () => {
   const { progress } = useJourney();
   const { transactions } = useTransactions();
   const navigate = useNavigate();
-  const { needRefresh, checking, checkForUpdate, applyUpdate } = usePWAUpdate();
+  const { needRefresh, checking, version, checkForUpdate, applyUpdate } = usePWAUpdate();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleAvatarChange = (e: ChangeEvent<HTMLInputElement>) => {
