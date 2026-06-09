@@ -406,11 +406,19 @@ const Trilha = () => {
           onClick={revealControls}
           onPointerMove={revealControls}
         >
-          <div className={cn(
-            "pointer-events-none absolute inset-x-0 top-0 z-10 flex items-center gap-3 bg-gradient-to-b from-black/80 to-transparent p-3 transition-opacity duration-200",
-            controlsVisible ? "opacity-100" : "opacity-0"
-          )}>
-            <button onClick={(event) => { event.stopPropagation(); void closePlayer(); }} className="pointer-events-auto flex h-10 w-10 items-center justify-center rounded-full bg-white/12 backdrop-blur-md">
+          <div
+            className={cn(
+              "pointer-events-none absolute inset-x-0 top-0 z-10 flex items-center gap-3 bg-gradient-to-b from-black/80 to-transparent p-3 transition-opacity duration-200",
+              controlsVisible ? "opacity-100" : "opacity-0",
+            )}
+          >
+            <button
+              onClick={(event) => {
+                event.stopPropagation();
+                void closePlayer();
+              }}
+              className="pointer-events-auto flex h-10 w-10 items-center justify-center rounded-full bg-white/12 backdrop-blur-md"
+            >
               <ArrowLeft className="h-4 w-4" />
             </button>
             <div className="min-w-0 flex-1">
@@ -418,7 +426,10 @@ const Trilha = () => {
               <p className="truncate text-sm font-semibold">{active.title}</p>
             </div>
             <button
-              onClick={(event) => { event.stopPropagation(); void closePlayer(); }}
+              onClick={(event) => {
+                event.stopPropagation();
+                void closePlayer();
+              }}
               aria-label="Encerrar vídeo"
               className="pointer-events-auto flex h-10 w-10 items-center justify-center rounded-full bg-white/12 backdrop-blur-md"
             >
@@ -434,14 +445,19 @@ const Trilha = () => {
               playsInline
               autoPlay
               preload="metadata"
-              onClick={(event) => { event.stopPropagation(); togglePlay(); }}
+              onClick={(event) => {
+                event.stopPropagation();
+                togglePlay();
+              }}
               className="aspect-video max-h-[100dvh] w-full max-w-[100dvw] bg-black object-contain"
             />
           </div>
-          <div className={cn(
-            "pointer-events-none absolute inset-x-0 bottom-0 z-10 bg-gradient-to-t from-black/90 to-transparent px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-12 transition-opacity duration-200",
-            controlsVisible ? "opacity-100" : "opacity-0"
-          )}>
+          <div
+            className={cn(
+              "pointer-events-none absolute inset-x-0 bottom-0 z-10 bg-gradient-to-t from-black/90 to-transparent px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-12 transition-opacity duration-200",
+              controlsVisible ? "opacity-100" : "opacity-0",
+            )}
+          >
             <div className="pointer-events-auto flex items-center gap-3">
               <button
                 onClick={(event) => { event.stopPropagation(); togglePlay(); }}
