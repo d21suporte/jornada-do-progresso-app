@@ -18,7 +18,7 @@ const Profile = () => {
   const { progress } = useJourney();
   const { transactions } = useTransactions();
   const navigate = useNavigate();
-  const { needRefresh, checking, checkForUpdate, applyUpdate } = usePWAUpdate();
+  const { needRefresh, checking, version, checkForUpdate, applyUpdate } = usePWAUpdate();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleAvatarChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -46,17 +46,16 @@ const Profile = () => {
   const [pinConfirm, setPinConfirm] = useState("");
 
   const handleCheckUpdate = async () => {
-    if (needRefresh) {
-      toast.success("Atualizando o app…");
+    toast.info("Verificando atualização…");
+    const has = await checkForUpdate();
+    if (has) {
+      toast.success("Atualização encontrada. Aplicando…");
       await applyUpdate();
+      // Após o reload, o usuário verá a versão nova já carregada.
+      toast.success("App atualizado com sucesso!");
       return;
     }
-    toast.info("Procurando atualização…");
-    await checkForUpdate();
-    setTimeout(async () => {
-      if (needRefresh) await applyUpdate();
-      else toast.success("Você já está na versão mais recente.");
-    }, 1800);
+    toast.success("Você já está na versão mais recente.");
   };
 
   const handleLogout = () => {
@@ -334,7 +333,7 @@ const Profile = () => {
       </Button>
 
       <p className="mt-4 text-center text-xs text-muted-foreground">
-        D21 — Jornada do Progresso · v1.0
+        D21 — Jornada do Progresso · v{version ?? "—"}
       </p>
     </MobileShell>
   );
