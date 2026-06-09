@@ -460,13 +460,22 @@ const Trilha = () => {
           >
             <div className="pointer-events-auto flex items-center gap-3">
               <button
-                onClick={(event) => { event.stopPropagation(); togglePlay(); }}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  togglePlay();
+                }}
                 aria-label={isPlaying ? "Pausar" : "Reproduzir"}
                 className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white text-black"
               >
-                {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4 fill-current" />}
+                {isPlaying ? (
+                  <Pause className="h-4 w-4" />
+                ) : (
+                  <Play className="h-4 w-4 fill-current" />
+                )}
               </button>
-              <span className="w-11 text-xs font-medium tabular-nums text-white/75">{formatTime(currentTime)}</span>
+              <span className="w-11 text-xs font-medium tabular-nums text-white/75">
+                {formatTime(currentTime)}
+              </span>
               <input
                 type="range"
                 min="0"
@@ -478,16 +487,25 @@ const Trilha = () => {
                 aria-label="Progresso do vídeo"
                 className="h-1 min-w-0 flex-1 accent-white"
               />
-              <span className="w-11 text-right text-xs font-medium tabular-nums text-white/75">{formatTime(duration)}</span>
+              <span className="w-11 text-right text-xs font-medium tabular-nums text-white/75">
+                {formatTime(duration)}
+              </span>
               <button
-                onClick={(event) => { event.stopPropagation(); toggleMute(); }}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  toggleMute();
+                }}
                 aria-label={isMuted ? "Ativar som" : "Silenciar"}
                 className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/12 backdrop-blur-md"
               >
                 {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
               </button>
               <button
-                onClick={(event) => { event.stopPropagation(); fullscreenRequestedRef.current = false; void enterImmersive(); }}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  fullscreenRequestedRef.current = false;
+                  void enterImmersive();
+                }}
                 aria-label="Tela cheia"
                 className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/12 backdrop-blur-md"
               >
