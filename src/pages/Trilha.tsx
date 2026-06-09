@@ -342,7 +342,9 @@ const Trilha = () => {
         {LESSONS.map((l) => {
           const p = progress[l.id];
           const status = statusOf(p);
-          const pct = p && p.duration ? Math.min(100, Math.round((p.position / p.duration) * 100)) : 0;
+          const pct = p && p.duration
+            ? Math.min(100, Math.round((p.position / p.duration) * 100))
+            : 0;
           return (
             <li key={l.id}>
               <button
@@ -370,7 +372,9 @@ const Trilha = () => {
                   )}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Dia {l.day}</p>
+                  <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                    Dia {l.day}
+                  </p>
                   <p className="truncate text-sm font-semibold">{l.title}</p>
                   <div className="mt-1.5 flex items-center gap-2">
                     <div className="h-1 flex-1 overflow-hidden rounded-full bg-primary/10">
@@ -389,7 +393,11 @@ const Trilha = () => {
                             : "text-muted-foreground",
                       )}
                     >
-                      {status === "done" ? "Concluída" : status === "doing" ? "Em andamento" : "Não iniciada"}
+                      {status === "done"
+                        ? "Concluída"
+                        : status === "doing"
+                          ? "Em andamento"
+                          : "Não iniciada"}
                     </span>
                   </div>
                 </div>
@@ -422,7 +430,9 @@ const Trilha = () => {
               <ArrowLeft className="h-4 w-4" />
             </button>
             <div className="min-w-0 flex-1">
-              <p className="text-[10px] font-bold uppercase tracking-wide text-white/60">Dia {active.day}</p>
+              <p className="text-[10px] font-bold uppercase tracking-wide text-white/60">
+                Dia {active.day}
+              </p>
               <p className="truncate text-sm font-semibold">{active.title}</p>
             </div>
             <button
@@ -515,7 +525,6 @@ const Trilha = () => {
           </div>
         </div>
       )}
-
     </MobileShell>
   );
 };
