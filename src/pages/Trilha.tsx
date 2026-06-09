@@ -2,7 +2,18 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import { MobileShell } from "@/components/MobileShell";
 import { useStorage } from "@/hooks/useStorage";
-import { ArrowLeft, CheckCircle2, Loader2, Maximize2, Pause, Play, PlayCircle, Volume2, VolumeX, X } from "lucide-react";
+import {
+  ArrowLeft,
+  CheckCircle2,
+  Loader2,
+  Maximize2,
+  Pause,
+  Play,
+  PlayCircle,
+  Volume2,
+  VolumeX,
+  X,
+} from "lucide-react";
 import { Link } from "@/lib/router-compat";
 import { cn } from "@/lib/utils";
 
@@ -15,11 +26,41 @@ interface Lesson {
 }
 
 const LESSONS: Lesson[] = [
-  { id: "aula0", day: 0, title: "Introdução", videoUrl: "https://jornadadoprogresso.com/wp-content/uploads/2026/06/aula0.mp4", imageUrl: "" },
-  { id: "aula1", day: 1, title: "Aula 1", videoUrl: "https://jornadadoprogresso.com/wp-content/uploads/2026/06/aula1.mp4", imageUrl: "" },
-  { id: "aula2", day: 2, title: "Aula 2", videoUrl: "https://jornadadoprogresso.com/wp-content/uploads/2026/06/aula2.mp4", imageUrl: "" },
-  { id: "aula3", day: 3, title: "Aula 3", videoUrl: "https://jornadadoprogresso.com/wp-content/uploads/2026/06/aula3.mp4", imageUrl: "" },
-  { id: "aula4", day: 4, title: "Aula 4", videoUrl: "https://jornadadoprogresso.com/wp-content/uploads/2026/06/aula4.mp4", imageUrl: "" },
+  {
+    id: "aula0",
+    day: 0,
+    title: "Introdução",
+    videoUrl: "https://jornadadoprogresso.com/wp-content/uploads/2026/06/aula0.mp4",
+    imageUrl: "",
+  },
+  {
+    id: "aula1",
+    day: 1,
+    title: "Aula 1",
+    videoUrl: "https://jornadadoprogresso.com/wp-content/uploads/2026/06/aula1.mp4",
+    imageUrl: "",
+  },
+  {
+    id: "aula2",
+    day: 2,
+    title: "Aula 2",
+    videoUrl: "https://jornadadoprogresso.com/wp-content/uploads/2026/06/aula2.mp4",
+    imageUrl: "",
+  },
+  {
+    id: "aula3",
+    day: 3,
+    title: "Aula 3",
+    videoUrl: "https://jornadadoprogresso.com/wp-content/uploads/2026/06/aula3.mp4",
+    imageUrl: "",
+  },
+  {
+    id: "aula4",
+    day: 4,
+    title: "Aula 4",
+    videoUrl: "https://jornadadoprogresso.com/wp-content/uploads/2026/06/aula4.mp4",
+    imageUrl: "",
+  },
 ];
 
 interface LessonProgress {
@@ -42,7 +83,9 @@ type FullscreenVideoElement = HTMLVideoElement & {
 function formatTime(seconds: number) {
   if (!Number.isFinite(seconds) || seconds < 0) return "0:00";
   const mins = Math.floor(seconds / 60);
-  const secs = Math.floor(seconds % 60).toString().padStart(2, "0");
+  const secs = Math.floor(seconds % 60)
+    .toString()
+    .padStart(2, "0");
   return `${mins}:${secs}`;
 }
 
