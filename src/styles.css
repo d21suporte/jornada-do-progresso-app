@@ -1,7 +1,6 @@
 @import "tailwindcss" source(none);
-@source "../src";
 @import "tw-animate-css";
-@import url("https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap");
+@source "../src";
 
 .font-display { font-family: "Bebas Neue", Impact, sans-serif; letter-spacing: 0.01em; }
 
