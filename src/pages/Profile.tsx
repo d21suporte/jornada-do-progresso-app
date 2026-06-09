@@ -46,17 +46,16 @@ const Profile = () => {
   const [pinConfirm, setPinConfirm] = useState("");
 
   const handleCheckUpdate = async () => {
-    if (needRefresh) {
-      toast.success("Atualizando o app…");
+    toast.info("Verificando atualização…");
+    const has = await checkForUpdate();
+    if (has) {
+      toast.success("Atualização encontrada. Aplicando…");
       await applyUpdate();
+      // Após o reload, o usuário verá a versão nova já carregada.
+      toast.success("App atualizado com sucesso!");
       return;
     }
-    toast.info("Procurando atualização…");
-    await checkForUpdate();
-    setTimeout(async () => {
-      if (needRefresh) await applyUpdate();
-      else toast.success("Você já está na versão mais recente.");
-    }, 1800);
+    toast.success("Você já está na versão mais recente.");
   };
 
   const handleLogout = () => {
