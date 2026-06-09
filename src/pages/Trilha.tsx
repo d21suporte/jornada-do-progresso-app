@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { MobileShell } from "@/components/MobileShell";
 import { useStorage } from "@/hooks/useStorage";
-import { ArrowLeft, CheckCircle2, Circle, PlayCircle, Loader2 } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Loader2, PlayCircle, X } from "lucide-react";
 import { Link } from "@/lib/router-compat";
 import { cn } from "@/lib/utils";
 
@@ -44,6 +44,47 @@ const Trilha = () => {
   const [activeId, setActiveId] = useState<string | null>(null);
   const active = useMemo(() => LESSONS.find((l) => l.id === activeId) ?? null, [activeId]);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const playerRef = useRef<HTMLDivElement>(null);
+
+  const exitImmersive = useCallback(async () => {
+    try {
+      const so = screen.orientation as ScreenOrientation & { unlock?: () => void };
+      so?.unlock?.();
+    } catch { /* noop */ }
+    try {
+      if (document.fullscreenElement) await document.exitFullscreen();
+    } catch { /* noop */ }
+  }, []);
+
+  const closePlayer = useCallback(() => {
+    void exitImmersive();
+    setActiveId(null);
+  }, [exitImmersive]);
+
+  // Enter fullscreen + lock landscape when a lesson opens
+  useEffect(() => {
+    if (!active) return;
+    const el = playerRef.current;
+    const tryEnter = async () => {
+      try {
+        if (el && !document.fullscreenElement) await el.requestFullscreen?.();
+      } catch { /* noop */ }
+      try {
+        const so = screen.orientation as ScreenOrientation & { lock?: (o: string) => Promise<void> };
+        await so?.lock?.("landscape");
+      } catch { /* device may not allow — fine */ }
+    };
+    void tryEnter();
+    const onFsChange = () => {
+      if (!document.fullscreenElement) closePlayer();
+    };
+    document.addEventListener("fullscreenchange", onFsChange);
+    return () => {
+      document.removeEventListener("fullscreenchange", onFsChange);
+      void exitImmersive();
+    };
+  }, [active, closePlayer, exitImmersive]);
+
 
   // resume + persist
   useEffect(() => {
@@ -155,19 +196,26 @@ const Trilha = () => {
 
       {active && (
         <div
-          className="fixed inset-0 z-50 flex flex-col bg-black/95 backdrop-blur"
-          onClick={() => setActiveId(null)}
+          ref={playerRef}
+          className="fixed inset-0 z-50 flex flex-col bg-black"
         >
-          <div className="flex items-center gap-3 p-4 text-white" onClick={(e) => e.stopPropagation()}>
-            <button onClick={() => setActiveId(null)} className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10">
+          <div className="flex items-center gap-3 p-3 text-white">
+            <button onClick={closePlayer} className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10">
               <ArrowLeft className="h-4 w-4" />
             </button>
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1">
               <p className="text-[10px] font-bold uppercase tracking-wide text-white/60">Dia {active.day}</p>
               <p className="truncate text-sm font-semibold">{active.title}</p>
             </div>
+            <button
+              onClick={closePlayer}
+              aria-label="Fechar"
+              className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10"
+            >
+              <X className="h-4 w-4" />
+            </button>
           </div>
-          <div className="flex flex-1 items-center justify-center px-4 pb-6" onClick={(e) => e.stopPropagation()}>
+          <div className="flex flex-1 items-center justify-center px-2 pb-2">
             <video
               ref={videoRef}
               src={active.videoUrl}
@@ -177,11 +225,12 @@ const Trilha = () => {
               playsInline
               autoPlay
               preload="metadata"
-              className="max-h-full w-full rounded-xl bg-black"
+              className="h-full max-h-full w-full rounded-lg bg-black object-contain"
             />
           </div>
         </div>
       )}
+
     </MobileShell>
   );
 };
