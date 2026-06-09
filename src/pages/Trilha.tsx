@@ -149,22 +149,32 @@ const Trilha = () => {
     fullscreenRequestedRef.current = false;
   }, []);
 
-  const closePlayer = useCallback(async (completed = false) => {
-    if (isClosingRef.current) return;
-    isClosingRef.current = true;
-    const lessonId = active?.id;
-    const v = videoRef.current;
-    if (v) {
-      v.pause();
-      if (lessonId) saveProgress(lessonId, completed ? { completed: true, position: v.duration || v.currentTime } : undefined);
-    }
-    await exitImmersive();
-    setActiveId(null);
-    setIsPlaying(false);
-    setCurrentTime(0);
-    setDuration(0);
-    window.setTimeout(() => { isClosingRef.current = false; }, 0);
-  }, [active?.id, exitImmersive, saveProgress]);
+  const closePlayer = useCallback(
+    async (completed = false) => {
+      if (isClosingRef.current) return;
+      isClosingRef.current = true;
+      const lessonId = active?.id;
+      const v = videoRef.current;
+      if (v) {
+        v.pause();
+        if (lessonId) {
+          saveProgress(
+            lessonId,
+            completed ? { completed: true, position: v.duration || v.currentTime } : undefined,
+          );
+        }
+      }
+      await exitImmersive();
+      setActiveId(null);
+      setIsPlaying(false);
+      setCurrentTime(0);
+      setDuration(0);
+      window.setTimeout(() => {
+        isClosingRef.current = false;
+      }, 0);
+    },
+    [active?.id, exitImmersive, saveProgress],
+  );
 
   const enterImmersive = useCallback(async () => {
     if (fullscreenRequestedRef.current) return;
@@ -177,18 +187,27 @@ const Trilha = () => {
       } else if (video?.webkitEnterFullscreen) {
         video.webkitEnterFullscreen();
       }
-    } catch { /* mobile browser may block fullscreen */ }
+    } catch {
+      /* mobile browser may block fullscreen */
+    }
     try {
-      const so = screen.orientation as ScreenOrientation & { lock?: (orientation: string) => Promise<void> };
+      const so = screen.orientation as ScreenOrientation & {
+        lock?: (orientation: string) => Promise<void>;
+      };
       await so?.lock?.("landscape");
-    } catch { /* device may not allow orientation lock */ }
+    } catch {
+      /* device may not allow orientation lock */
+    }
   }, []);
 
-  const openLesson = useCallback((id: string) => {
-    flushSync(() => setActiveId(id));
-    setControlsVisible(true);
-    void enterImmersive();
-  }, [enterImmersive]);
+  const openLesson = useCallback(
+    (id: string) => {
+      flushSync(() => setActiveId(id));
+      setControlsVisible(true);
+      void enterImmersive();
+    },
+    [enterImmersive],
+  );
 
   useEffect(() => {
     if (!active) return;
@@ -218,13 +237,14 @@ const Trilha = () => {
   useEffect(() => {
     if (!active || !controlsVisible) return;
     if (controlsTimerRef.current) window.clearTimeout(controlsTimerRef.current);
-    controlsTimerRef.current = window.setTimeout(() => setControlsVisible(false), isPlaying ? 2600 : 5000);
+    controlsTimerRef.current = window.setTimeout(
+      () => setControlsVisible(false),
+      isPlaying ? 2600 : 5000,
+    );
     return () => {
       if (controlsTimerRef.current) window.clearTimeout(controlsTimerRef.current);
     };
   }, [active, controlsVisible, isPlaying]);
-
-
   // resume + persist
   useEffect(() => {
     const v = videoRef.current;
