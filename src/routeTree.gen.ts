@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as VitrineRouteImport } from './routes/vitrine'
+import { Route as TrilhaRouteImport } from './routes/trilha'
 import { Route as RelatoriosRouteImport } from './routes/relatorios'
 import { Route as PerfilRouteImport } from './routes/perfil'
 import { Route as MeuNegocioRouteImport } from './routes/meu-negocio'
@@ -22,6 +23,11 @@ import { Route as IndexRouteImport } from './routes/index'
 const VitrineRoute = VitrineRouteImport.update({
   id: '/vitrine',
   path: '/vitrine',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TrilhaRoute = TrilhaRouteImport.update({
+  id: '/trilha',
+  path: '/trilha',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RelatoriosRoute = RelatoriosRouteImport.update({
@@ -74,6 +80,7 @@ export interface FileRoutesByFullPath {
   '/meu-negocio': typeof MeuNegocioRoute
   '/perfil': typeof PerfilRoute
   '/relatorios': typeof RelatoriosRoute
+  '/trilha': typeof TrilhaRoute
   '/vitrine': typeof VitrineRoute
 }
 export interface FileRoutesByTo {
@@ -85,6 +92,7 @@ export interface FileRoutesByTo {
   '/meu-negocio': typeof MeuNegocioRoute
   '/perfil': typeof PerfilRoute
   '/relatorios': typeof RelatoriosRoute
+  '/trilha': typeof TrilhaRoute
   '/vitrine': typeof VitrineRoute
 }
 export interface FileRoutesById {
@@ -97,6 +105,7 @@ export interface FileRoutesById {
   '/meu-negocio': typeof MeuNegocioRoute
   '/perfil': typeof PerfilRoute
   '/relatorios': typeof RelatoriosRoute
+  '/trilha': typeof TrilhaRoute
   '/vitrine': typeof VitrineRoute
 }
 export interface FileRouteTypes {
@@ -110,6 +119,7 @@ export interface FileRouteTypes {
     | '/meu-negocio'
     | '/perfil'
     | '/relatorios'
+    | '/trilha'
     | '/vitrine'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -121,6 +131,7 @@ export interface FileRouteTypes {
     | '/meu-negocio'
     | '/perfil'
     | '/relatorios'
+    | '/trilha'
     | '/vitrine'
   id:
     | '__root__'
@@ -132,6 +143,7 @@ export interface FileRouteTypes {
     | '/meu-negocio'
     | '/perfil'
     | '/relatorios'
+    | '/trilha'
     | '/vitrine'
   fileRoutesById: FileRoutesById
 }
@@ -144,6 +156,7 @@ export interface RootRouteChildren {
   MeuNegocioRoute: typeof MeuNegocioRoute
   PerfilRoute: typeof PerfilRoute
   RelatoriosRoute: typeof RelatoriosRoute
+  TrilhaRoute: typeof TrilhaRoute
   VitrineRoute: typeof VitrineRoute
 }
 
@@ -154,6 +167,13 @@ declare module '@tanstack/react-router' {
       path: '/vitrine'
       fullPath: '/vitrine'
       preLoaderRoute: typeof VitrineRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/trilha': {
+      id: '/trilha'
+      path: '/trilha'
+      fullPath: '/trilha'
+      preLoaderRoute: typeof TrilhaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/relatorios': {
@@ -224,8 +244,19 @@ const rootRouteChildren: RootRouteChildren = {
   MeuNegocioRoute: MeuNegocioRoute,
   PerfilRoute: PerfilRoute,
   RelatoriosRoute: RelatoriosRoute,
+  TrilhaRoute: TrilhaRoute,
   VitrineRoute: VitrineRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
