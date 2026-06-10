@@ -1,18 +1,14 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { flushSync } from "react-dom";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { MobileShell } from "@/components/MobileShell";
 import { useStorage } from "@/hooks/useStorage";
 import {
   ArrowLeft,
   CheckCircle2,
-  Loader2,
   Maximize2,
   Pause,
   Play,
-  PlayCircle,
   Volume2,
   VolumeX,
-  X,
 } from "lucide-react";
 import { Link } from "@/lib/router-compat";
 import { cn } from "@/lib/utils";
@@ -26,67 +22,33 @@ interface Lesson {
 }
 
 const LESSONS: Lesson[] = [
-  {
-    id: "aula0",
-    day: 0,
-    title: "Introdução",
-    videoUrl: "https://jornadadoprogresso.com/wp-content/uploads/2026/06/aula0.mp4",
-    imageUrl: "",
-  },
-  {
-    id: "aula1",
-    day: 1,
-    title: "Aula 1",
-    videoUrl: "https://jornadadoprogresso.com/wp-content/uploads/2026/06/aula1.mp4",
-    imageUrl: "",
-  },
-  {
-    id: "aula2",
-    day: 2,
-    title: "Aula 2",
-    videoUrl: "https://jornadadoprogresso.com/wp-content/uploads/2026/06/aula2.mp4",
-    imageUrl: "",
-  },
-  {
-    id: "aula3",
-    day: 3,
-    title: "Aula 3",
-    videoUrl: "https://jornadadoprogresso.com/wp-content/uploads/2026/06/aula3.mp4",
-    imageUrl: "",
-  },
-  {
-    id: "aula4",
-    day: 4,
-    title: "Aula 4",
-    videoUrl: "https://jornadadoprogresso.com/wp-content/uploads/2026/06/aula4.mp4",
-    imageUrl: "",
-  },
+  { id: "aula0", day: 0, title: "Introdução", videoUrl: "https://jornadadoprogresso.com/wp-content/uploads/2026/06/aula0.mp4", imageUrl: "" },
+  { id: "aula1", day: 1, title: "Aula 1", videoUrl: "https://jornadadoprogresso.com/wp-content/uploads/2026/06/aula1.mp4", imageUrl: "" },
+  { id: "aula2", day: 2, title: "Aula 2", videoUrl: "https://jornadadoprogresso.com/wp-content/uploads/2026/06/aula2.mp4", imageUrl: "" },
+  { id: "aula3", day: 3, title: "Aula 3", videoUrl: "https://jornadadoprogresso.com/wp-content/uploads/2026/06/aula3.mp4", imageUrl: "" },
+  { id: "aula4", day: 4, title: "Aula 4", videoUrl: "https://jornadadoprogresso.com/wp-content/uploads/2026/06/aula4.mp4", imageUrl: "" },
 ];
 
 interface LessonProgress {
-  position: number; // seconds
+  position: number;
   duration: number;
   completed: boolean;
   updatedAt: number;
 }
 
 type ProgressMap = Record<string, LessonProgress>;
-
 const STORAGE_KEY = "trilha.progress.v1";
 
 type FullscreenVideoElement = HTMLVideoElement & {
   webkitEnterFullscreen?: () => void;
   webkitExitFullscreen?: () => void;
-  webkitDisplayingFullscreen?: boolean;
 };
 
 function formatTime(seconds: number) {
   if (!Number.isFinite(seconds) || seconds < 0) return "0:00";
-  const mins = Math.floor(seconds / 60);
-  const secs = Math.floor(seconds % 60)
-    .toString()
-    .padStart(2, "0");
-  return `${mins}:${secs}`;
+  const m = Math.floor(seconds / 60);
+  const s = Math.floor(seconds % 60).toString().padStart(2, "0");
+  return `${m}:${s}`;
 }
 
 function statusOf(p?: LessonProgress): "todo" | "doing" | "done" {
@@ -96,231 +58,267 @@ function statusOf(p?: LessonProgress): "todo" | "doing" | "done" {
   return "todo";
 }
 
-const Trilha = () => {
-  const [progress, setProgress] = useStorage<ProgressMap>(STORAGE_KEY, {});
-  const [activeId, setActiveId] = useState<string | null>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(0);
-  const [isMuted, setIsMuted] = useState(false);
-  const [controlsVisible, setControlsVisible] = useState(true);
-  const active = useMemo(() => LESSONS.find((l) => l.id === activeId) ?? null, [activeId]);
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const playerRef = useRef<HTMLDivElement>(null);
-  const isClosingRef = useRef(false);
-  const fullscreenRequestedRef = useRef(false);
-  const controlsTimerRef = useRef<number | null>(null);
+interface LessonCardProps {
+  lesson: Lesson;
+  progress?: LessonProgress;
+  onUpdate: (id: string, extra?: Partial<LessonProgress>) => void;
+}
 
-  const saveProgress = useCallback(
-    (lessonId: string, extra?: Partial<LessonProgress>) => {
+function LessonCard({ lesson, progress, onUpdate }: LessonCardProps) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
+  const [current, setCurrent] = useState(progress?.position ?? 0);
+  const [duration, setDuration] = useState(progress?.duration ?? 0);
+  const [started, setStarted] = useState(false);
+  const lastSaveRef = useRef(0);
+  const resumedRef = useRef(false);
+
+  const status = statusOf(progress);
+  const pct = duration ? Math.min(100, (current / duration) * 100) : 0;
+
+  const save = useCallback(
+    (extra?: Partial<LessonProgress>) => {
       const v = videoRef.current;
       if (!v) return;
-      setProgress((prev) => ({
-        ...prev,
-        [lessonId]: {
-          position: v.currentTime,
-          duration: v.duration || prev[lessonId]?.duration || 0,
-          completed: extra?.completed ?? prev[lessonId]?.completed ?? false,
-          updatedAt: Date.now(),
-          ...extra,
-        },
-      }));
+      onUpdate(lesson.id, {
+        position: v.currentTime,
+        duration: v.duration || duration,
+        ...extra,
+      });
     },
-    [setProgress],
+    [lesson.id, onUpdate, duration],
   );
 
-  const exitImmersive = useCallback(async () => {
-    try {
-      const so = screen.orientation as ScreenOrientation & { unlock?: () => void };
-      so?.unlock?.();
-    } catch {
-      /* noop */
-    }
-    try {
-      const video = videoRef.current as FullscreenVideoElement | null;
-      if (video?.webkitDisplayingFullscreen) video.webkitExitFullscreen?.();
-      if (document.fullscreenElement) await document.exitFullscreen();
-    } catch {
-      /* noop */
-    }
-    fullscreenRequestedRef.current = false;
-  }, []);
-
-  const closePlayer = useCallback(
-    async (completed = false) => {
-      if (isClosingRef.current) return;
-      isClosingRef.current = true;
-      const lessonId = active?.id;
-      const v = videoRef.current;
-      if (v) {
-        v.pause();
-        if (lessonId) {
-          saveProgress(
-            lessonId,
-            completed ? { completed: true, position: v.duration || v.currentTime } : undefined,
-          );
-        }
-      }
-      await exitImmersive();
-      setActiveId(null);
-      setIsPlaying(false);
-      setCurrentTime(0);
-      setDuration(0);
-      window.setTimeout(() => {
-        isClosingRef.current = false;
-      }, 0);
-    },
-    [active?.id, exitImmersive, saveProgress],
-  );
-
-  const enterImmersive = useCallback(async () => {
-    if (fullscreenRequestedRef.current) return;
-    fullscreenRequestedRef.current = true;
-    const el = playerRef.current;
-    const video = videoRef.current as FullscreenVideoElement | null;
-    try {
-      if (el?.requestFullscreen && !document.fullscreenElement) {
-        await el.requestFullscreen();
-      } else if (video?.webkitEnterFullscreen) {
-        video.webkitEnterFullscreen();
-      }
-    } catch {
-      /* mobile browser may block fullscreen */
-    }
-    try {
-      const so = screen.orientation as ScreenOrientation & {
-        lock?: (orientation: string) => Promise<void>;
-      };
-      await so?.lock?.("landscape");
-    } catch {
-      /* device may not allow orientation lock */
-    }
-  }, []);
-
-  const openLesson = useCallback(
-    (id: string) => {
-      flushSync(() => setActiveId(id));
-      setControlsVisible(true);
-      void enterImmersive();
-    },
-    [enterImmersive],
-  );
-
-  useEffect(() => {
-    if (!active) return;
-    const previousOverflow = document.body.style.overflow;
-    const previousHtmlOverflow = document.documentElement.style.overflow;
-    const scrollY = window.scrollY;
-    document.body.style.overflow = "hidden";
-    document.documentElement.style.overflow = "hidden";
-    const onFsChange = () => {
-      if (!document.fullscreenElement && !isClosingRef.current) void closePlayer();
-    };
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") void closePlayer();
-    };
-    document.addEventListener("fullscreenchange", onFsChange);
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("fullscreenchange", onFsChange);
-      document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = previousOverflow;
-      document.documentElement.style.overflow = previousHtmlOverflow;
-      window.scrollTo(0, scrollY);
-      void exitImmersive();
-    };
-  }, [active, closePlayer, exitImmersive]);
-
-  useEffect(() => {
-    if (!active || !controlsVisible) return;
-    if (controlsTimerRef.current) window.clearTimeout(controlsTimerRef.current);
-    controlsTimerRef.current = window.setTimeout(
-      () => setControlsVisible(false),
-      isPlaying ? 2600 : 5000,
-    );
-    return () => {
-      if (controlsTimerRef.current) window.clearTimeout(controlsTimerRef.current);
-    };
-  }, [active, controlsVisible, isPlaying]);
-  // resume + persist
-  useEffect(() => {
-    const v = videoRef.current;
-    if (!v || !active) return;
-    const saved = progress[active.id];
-    const save = (extra?: Partial<LessonProgress>) => saveProgress(active.id, extra);
-    const onTime = () => {
-      setCurrentTime(v.currentTime);
-      setDuration(v.duration || 0);
-      if (!v.duration) return;
-      // throttle by 3s
-      const last = progress[active.id]?.updatedAt ?? 0;
-      if (Date.now() - last < 3000) return;
-      const done = v.currentTime / v.duration >= 0.95;
-      save(done ? { completed: true } : undefined);
-    };
-    const onLoaded = () => {
-      setDuration(v.duration || 0);
-      if (saved && saved.position > 0 && saved.position < (v.duration || Infinity) - 2) {
-        v.currentTime = saved.position;
-        setCurrentTime(saved.position);
-      }
-    };
-    const onEnded = () => {
-      save({ completed: true, position: v.duration });
-      void closePlayer(true);
-    };
-    const onPause = () => save();
-    const onPlay = () => setIsPlaying(true);
-    const onVideoPause = () => setIsPlaying(false);
-    const onVolume = () => setIsMuted(v.muted);
-
-    v.addEventListener("loadedmetadata", onLoaded);
-    v.addEventListener("timeupdate", onTime);
-    v.addEventListener("ended", onEnded);
-    v.addEventListener("pause", onPause);
-    v.addEventListener("play", onPlay);
-    v.addEventListener("pause", onVideoPause);
-    v.addEventListener("volumechange", onVolume);
-    return () => {
-      v.removeEventListener("loadedmetadata", onLoaded);
-      v.removeEventListener("timeupdate", onTime);
-      v.removeEventListener("ended", onEnded);
-      v.removeEventListener("pause", onPause);
-      v.removeEventListener("play", onPlay);
-      v.removeEventListener("pause", onVideoPause);
-      v.removeEventListener("volumechange", onVolume);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [active?.id]);
-
-  const revealControls = useCallback(() => setControlsVisible(true), []);
-
-  const togglePlay = useCallback(() => {
+  const handleLoaded = () => {
     const v = videoRef.current;
     if (!v) return;
-    revealControls();
-    if (v.paused) void v.play();
-    else v.pause();
-  }, [revealControls]);
+    setDuration(v.duration || 0);
+    if (!resumedRef.current && progress?.position && progress.position < (v.duration || Infinity) - 2) {
+      v.currentTime = progress.position;
+      setCurrent(progress.position);
+    }
+    resumedRef.current = true;
+  };
 
-  const toggleMute = useCallback(() => {
+  const handleTime = () => {
+    const v = videoRef.current;
+    if (!v) return;
+    setCurrent(v.currentTime);
+    if (!v.duration) return;
+    if (Date.now() - lastSaveRef.current < 3000) return;
+    lastSaveRef.current = Date.now();
+    const done = v.currentTime / v.duration >= 0.95;
+    save(done ? { completed: true } : undefined);
+  };
+
+  const togglePlay = async () => {
+    const v = videoRef.current;
+    if (!v) return;
+    setStarted(true);
+    if (v.paused) {
+      try {
+        await v.play();
+      } catch {
+        /* noop */
+      }
+    } else {
+      v.pause();
+    }
+  };
+
+  const toggleMute = () => {
     const v = videoRef.current;
     if (!v) return;
     v.muted = !v.muted;
     setIsMuted(v.muted);
-    revealControls();
-  }, [revealControls]);
+  };
 
-  const seekVideo = useCallback(
-    (value: string) => {
+  const seek = (value: string) => {
+    const v = videoRef.current;
+    if (!v) return;
+    const next = Number(value);
+    v.currentTime = next;
+    setCurrent(next);
+  };
+
+  const enterFullscreen = async () => {
+    const v = videoRef.current as FullscreenVideoElement | null;
+    const w = wrapperRef.current;
+    if (!v) return;
+    try {
+      if (v.webkitEnterFullscreen) {
+        v.webkitEnterFullscreen();
+        return;
+      }
+      if (w?.requestFullscreen) {
+        await w.requestFullscreen();
+      } else if (v.requestFullscreen) {
+        await v.requestFullscreen();
+      }
+    } catch {
+      /* noop */
+    }
+  };
+
+  // cleanup: save on unmount
+  useEffect(() => {
+    return () => {
       const v = videoRef.current;
-      if (!v) return;
-      const next = Number(value);
-      v.currentTime = next;
-      setCurrentTime(next);
-      revealControls();
+      if (!v || !v.duration) return;
+      onUpdate(lesson.id, {
+        position: v.currentTime,
+        duration: v.duration,
+      });
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return (
+    <div className="overflow-hidden rounded-2xl bg-card shadow-soft">
+      <div
+        ref={wrapperRef}
+        className="relative w-full overflow-hidden bg-black"
+        style={{ aspectRatio: "16 / 9" }}
+      >
+        <video
+          ref={videoRef}
+          src={lesson.videoUrl}
+          poster={lesson.imageUrl || undefined}
+          preload="metadata"
+          playsInline
+          controlsList="nodownload noplaybackrate"
+          disablePictureInPicture
+          onLoadedMetadata={handleLoaded}
+          onTimeUpdate={handleTime}
+          onPlay={() => setIsPlaying(true)}
+          onPause={() => {
+            setIsPlaying(false);
+            save();
+          }}
+          onEnded={() => {
+            setIsPlaying(false);
+            save({ completed: true });
+          }}
+          onVolumeChange={() => {
+            const v = videoRef.current;
+            if (v) setIsMuted(v.muted);
+          }}
+          className="absolute inset-0 h-full w-full object-contain"
+        />
+
+        {!started && !isPlaying && (
+          <button
+            onClick={togglePlay}
+            aria-label="Reproduzir"
+            className="absolute inset-0 flex items-center justify-center bg-black/30 transition-smooth active:scale-95"
+          >
+            <span className="flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-soft">
+              <Play className="h-6 w-6 fill-current" />
+            </span>
+          </button>
+        )}
+
+        {started && (
+          <div className="absolute inset-x-0 bottom-0 flex items-center gap-2 bg-gradient-to-t from-black/85 to-transparent px-3 pb-2 pt-8 text-white">
+            <button
+              onClick={togglePlay}
+              aria-label={isPlaying ? "Pausar" : "Reproduzir"}
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/15 backdrop-blur-sm"
+            >
+              {isPlaying ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5 fill-current" />}
+            </button>
+            <span className="w-9 text-[10px] font-medium tabular-nums text-white/85">
+              {formatTime(current)}
+            </span>
+            <input
+              type="range"
+              min={0}
+              max={duration || 0}
+              step={0.1}
+              value={Math.min(current, duration || current)}
+              onChange={(e) => seek(e.target.value)}
+              aria-label="Progresso"
+              className="h-1 min-w-0 flex-1 accent-primary"
+            />
+            <span className="w-9 text-right text-[10px] font-medium tabular-nums text-white/85">
+              {formatTime(duration)}
+            </span>
+            <button
+              onClick={toggleMute}
+              aria-label={isMuted ? "Ativar som" : "Silenciar"}
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/15 backdrop-blur-sm"
+            >
+              {isMuted ? <VolumeX className="h-3.5 w-3.5" /> : <Volume2 className="h-3.5 w-3.5" />}
+            </button>
+            <button
+              onClick={enterFullscreen}
+              aria-label="Tela cheia"
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/15 backdrop-blur-sm"
+            >
+              <Maximize2 className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        )}
+      </div>
+
+      <div className="p-4">
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-[10px] font-bold uppercase tracking-wide text-primary">
+              Dia {lesson.day}
+            </p>
+            <p className="truncate text-sm font-semibold">{lesson.title}</p>
+          </div>
+          {status === "done" && (
+            <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-600" />
+          )}
+        </div>
+        <div className="mt-3 flex items-center gap-2">
+          <div className="h-1 flex-1 overflow-hidden rounded-full bg-primary/10">
+            <div
+              className="h-full rounded-full bg-primary transition-all"
+              style={{ width: `${pct}%` }}
+            />
+          </div>
+          <span
+            className={cn(
+              "text-[10px] font-bold uppercase tracking-wide",
+              status === "done"
+                ? "text-emerald-600"
+                : status === "doing"
+                  ? "text-primary"
+                  : "text-muted-foreground",
+            )}
+          >
+            {status === "done" ? "Concluída" : status === "doing" ? "Em andamento" : "Não iniciada"}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const Trilha = () => {
+  const [progress, setProgress] = useStorage<ProgressMap>(STORAGE_KEY, {});
+
+  const update = useCallback(
+    (id: string, extra?: Partial<LessonProgress>) => {
+      setProgress((prev) => {
+        const prior = prev[id];
+        return {
+          ...prev,
+          [id]: {
+            position: extra?.position ?? prior?.position ?? 0,
+            duration: extra?.duration ?? prior?.duration ?? 0,
+            completed: extra?.completed ?? prior?.completed ?? false,
+            updatedAt: Date.now(),
+          },
+        };
+      });
     },
-    [revealControls],
+    [setProgress],
   );
 
   return (
@@ -338,192 +336,11 @@ const Trilha = () => {
         </div>
       </header>
 
-      <ul className="space-y-3">
-        {LESSONS.map((l) => {
-          const p = progress[l.id];
-          const status = statusOf(p);
-          const pct =
-            p && p.duration ? Math.min(100, Math.round((p.position / p.duration) * 100)) : 0;
-          return (
-            <li key={l.id}>
-              <button
-                onClick={() => openLesson(l.id)}
-                className="flex w-full items-center gap-3 rounded-2xl bg-card p-4 text-left shadow-soft transition-smooth active:scale-[0.98]"
-              >
-                <div
-                  className={cn(
-                    "flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-2xl",
-                    status === "done"
-                      ? "bg-emerald-500/15 text-emerald-600"
-                      : status === "doing"
-                        ? "bg-primary/15 text-primary"
-                        : "bg-secondary text-secondary-foreground",
-                  )}
-                >
-                  {l.imageUrl ? (
-                    <img src={l.imageUrl} alt="" className="h-full w-full object-cover" />
-                  ) : status === "done" ? (
-                    <CheckCircle2 className="h-5 w-5" />
-                  ) : status === "doing" ? (
-                    <Loader2 className="h-5 w-5" />
-                  ) : (
-                    <PlayCircle className="h-5 w-5" />
-                  )}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                    Dia {l.day}
-                  </p>
-                  <p className="truncate text-sm font-semibold">{l.title}</p>
-                  <div className="mt-1.5 flex items-center gap-2">
-                    <div className="h-1 flex-1 overflow-hidden rounded-full bg-primary/10">
-                      <div
-                        className="h-full rounded-full bg-primary transition-all"
-                        style={{ width: `${pct}%` }}
-                      />
-                    </div>
-                    <span
-                      className={cn(
-                        "text-[10px] font-bold uppercase tracking-wide",
-                        status === "done"
-                          ? "text-emerald-600"
-                          : status === "doing"
-                            ? "text-primary"
-                            : "text-muted-foreground",
-                      )}
-                    >
-                      {status === "done"
-                        ? "Concluída"
-                        : status === "doing"
-                          ? "Em andamento"
-                          : "Não iniciada"}
-                    </span>
-                  </div>
-                </div>
-              </button>
-            </li>
-          );
-        })}
-      </ul>
-
-      {active && (
-        <div
-          ref={playerRef}
-          className="fixed inset-0 z-50 flex h-[100dvh] w-[100dvw] touch-none flex-col overflow-hidden bg-black text-white"
-          onClick={revealControls}
-          onPointerMove={revealControls}
-        >
-          <div
-            className={cn(
-              "pointer-events-none absolute inset-x-0 top-0 z-10 flex items-center gap-3 bg-gradient-to-b from-black/80 to-transparent p-3 transition-opacity duration-200",
-              controlsVisible ? "opacity-100" : "opacity-0",
-            )}
-          >
-            <button
-              onClick={(event) => {
-                event.stopPropagation();
-                void closePlayer();
-              }}
-              className="pointer-events-auto flex h-10 w-10 items-center justify-center rounded-full bg-white/12 backdrop-blur-md"
-            >
-              <ArrowLeft className="h-4 w-4" />
-            </button>
-            <div className="min-w-0 flex-1">
-              <p className="text-[10px] font-bold uppercase tracking-wide text-white/60">
-                Dia {active.day}
-              </p>
-              <p className="truncate text-sm font-semibold">{active.title}</p>
-            </div>
-            <button
-              onClick={(event) => {
-                event.stopPropagation();
-                void closePlayer();
-              }}
-              aria-label="Encerrar vídeo"
-              className="pointer-events-auto flex h-10 w-10 items-center justify-center rounded-full bg-white/12 backdrop-blur-md"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          </div>
-          <div className="flex h-full w-full items-center justify-center bg-black">
-            <video
-              ref={videoRef}
-              src={active.videoUrl}
-              poster={active.imageUrl || undefined}
-              controlsList="nodownload"
-              playsInline
-              autoPlay
-              preload="metadata"
-              onClick={(event) => {
-                event.stopPropagation();
-                togglePlay();
-              }}
-              className="aspect-video max-h-[100dvh] w-full max-w-[100dvw] bg-black object-contain"
-            />
-          </div>
-          <div
-            className={cn(
-              "pointer-events-none absolute inset-x-0 bottom-0 z-10 bg-gradient-to-t from-black/90 to-transparent px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-12 transition-opacity duration-200",
-              controlsVisible ? "opacity-100" : "opacity-0",
-            )}
-          >
-            <div className="pointer-events-auto flex items-center gap-3">
-              <button
-                onClick={(event) => {
-                  event.stopPropagation();
-                  togglePlay();
-                }}
-                aria-label={isPlaying ? "Pausar" : "Reproduzir"}
-                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white text-black"
-              >
-                {isPlaying ? (
-                  <Pause className="h-4 w-4" />
-                ) : (
-                  <Play className="h-4 w-4 fill-current" />
-                )}
-              </button>
-              <span className="w-11 text-xs font-medium tabular-nums text-white/75">
-                {formatTime(currentTime)}
-              </span>
-              <input
-                type="range"
-                min="0"
-                max={duration || 0}
-                step="0.1"
-                value={Math.min(currentTime, duration || currentTime)}
-                onClick={(event) => event.stopPropagation()}
-                onChange={(event) => seekVideo(event.target.value)}
-                aria-label="Progresso do vídeo"
-                className="h-1 min-w-0 flex-1 accent-white"
-              />
-              <span className="w-11 text-right text-xs font-medium tabular-nums text-white/75">
-                {formatTime(duration)}
-              </span>
-              <button
-                onClick={(event) => {
-                  event.stopPropagation();
-                  toggleMute();
-                }}
-                aria-label={isMuted ? "Ativar som" : "Silenciar"}
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/12 backdrop-blur-md"
-              >
-                {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
-              </button>
-              <button
-                onClick={(event) => {
-                  event.stopPropagation();
-                  fullscreenRequestedRef.current = false;
-                  void enterImmersive();
-                }}
-                aria-label="Tela cheia"
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/12 backdrop-blur-md"
-              >
-                <Maximize2 className="h-4 w-4" />
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <div className="space-y-4">
+        {LESSONS.map((l) => (
+          <LessonCard key={l.id} lesson={l} progress={progress[l.id]} onUpdate={update} />
+        ))}
+      </div>
     </MobileShell>
   );
 };
